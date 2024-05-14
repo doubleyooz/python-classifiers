@@ -1,9 +1,13 @@
-class MinimumDistance:
-    def __init__(self, setosa_avg, versicolor_avg):
+import numpy as np
+from Model import ModelInterface
+
+
+class MinimumDistance(ModelInterface):
+                def __init__(self, setosa_avg, versicolor_avg):
         self.setosa_avg = setosa_avg
         self.versicolor_avg = versicolor_avg
 
-    def decision_function(self, row):
+    def decision_function_(self, row):
         x1 = row['Sepal length']
         x2 = row['Sepal width']
         x3 = row['Petal length']

@@ -1,5 +1,8 @@
-class MinimumDistance2:
-    def __init__(self, setosa_avg, versicolor_avg):
+import numpy as np
+from Model import ModelInterface
+
+class MinimumDistance2(ModelInterface):
+    def __init__(self, setosa_avg, versicolor_avg) :
         self.setosa_avg = setosa_avg
         self.versicolor_avg = versicolor_avg
 
