@@ -1,6 +1,4 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.metrics import confusion_matrix
     
 path = './assets/Iris.csv'
@@ -29,6 +27,11 @@ virginica_avg_x1 = virginica_df['Sepal length'].mean()
 virginica_avg_x2 = virginica_df['Sepal width'].mean()
 virginica_avg_x3 = virginica_df['Petal length'].mean()
 virginica_avg_x4 = virginica_df['Petal width'].mean()
+
+
+setosa_avg = [setosa_avg_x1, setosa_avg_x2, setosa_avg_x3, setosa_avg_x4]
+versicolor_avg = [versicolor_avg_x1, versicolor_avg_x2, versicolor_avg_x3, versicolor_avg_x4]
+virginica_avg = [virginica_avg_x1, virginica_avg_x2, virginica_avg_x3, virginica_avg_x4]
 
 # Randomly sample 70% of your dataframe
 data = non_versicolor_df.copy().sample(frac=0.7)

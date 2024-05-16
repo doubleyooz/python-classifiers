@@ -1,5 +1,5 @@
 import numpy as np
-from Model import ModelInterface
+from models.Model import ModelInterface
 
 class MinimumDistance2(ModelInterface):
     def __init__(self, setosa_avg, versicolor_avg) :
