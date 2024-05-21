@@ -10,7 +10,7 @@ non_versicolor_df = df[df['Species'] != 'versicolor']
 # Select the desired columns
 setosa_df = df[df['Species'] == 'setosa']
 versicolor_df = df[df['Species'] == 'versicolor']
-virginica_df = df[df['Species'] == 'versicolor']
+virginica_df = df[df['Species'] == 'virginica']
 
 
 setosa_avg_x1 = setosa_df['Sepal length'].mean()

@@ -3,9 +3,10 @@ import numpy as np
 from models.Model import ModelInterface
 
 class MinimumDistance(ModelInterface):
-    def __init__(self, setosa_avg, versicolor_avg):
-      self.setosa_avg = setosa_avg
-      self.versicolor_avg = versicolor_avg
+    def __init__(self, class1_avg, class2_avg, pairs=['setosa', 'versicolor']):
+      self.class1_avg = class1_avg
+      self.class2_avg = class2_avg
+      self.pairs = pairs
 
     def decision_function(self, row):
         x1 = row['Sepal length']
@@ -13,17 +14,17 @@ class MinimumDistance(ModelInterface):
         x3 = row['Petal length']
         x4 = row['Petal width']
 
-        setosa_w0 = sum(val ** 2 for val in self.setosa_avg)
-        versicolor_w0 = sum(val ** 2 for val in self.versicolor_avg)
+        class1_w0 = sum(val ** 2 for val in self.class1_avg)
+        class2_w0 = sum(val ** 2 for val in self.class2_avg)
 
-        d1 = x1 * self.setosa_avg[0] + x2 * self.setosa_avg[1] + x3 * self.setosa_avg[2] + x4 * self.setosa_avg[3] - (setosa_w0 / 2)
-        d2 = x1 * self.versicolor_avg[0] + x2 * self.versicolor_avg[1] + x3 * self.versicolor_avg[2] + x4 * self.versicolor_avg[3] - (versicolor_w0 / 2)
+        d1 = x1 * self.class1_avg[0] + x2 * self.class1_avg[1] + x3 * self.class1_avg[2] + x4 * self.class1_avg[3] - (class1_w0 / 2)
+        d2 = x1 * self.class2_avg[0] + x2 * self.class2_avg[1] + x3 * self.class2_avg[2] + x4 * self.class2_avg[3] - (class2_w0 / 2)
 
-       
+        # print(d1, d2, d1-d2)
         return (d1 - d2)
 
     def classify(self, row):
-        return 'setosa' if self.decision_function(row) > 0 else 'versicolor'
+        return self.pairs[0] if self.decision_function(row) > 0 else self.pairs[1]
 
     def surface(self, row):
         x1 = row['Sepal length']
@@ -31,11 +32,11 @@ class MinimumDistance(ModelInterface):
         x3 = row['Petal length']
         x4 = row['Petal width']
 
-        setosa_w0 = sum(val ** 2 for val in self.setosa_avg)
-        versicolor_w0 = sum(val ** 2 for val in self.versicolor_avg)
+        class1_w0 = sum(val ** 2 for val in self.class1_avg)
+        class2_w0 = sum(val ** 2 for val in self.class2_avg)
 
-        d1 = x1 * self.setosa_avg[0] + x2 * self.setosa_avg[1] + x3 * self.setosa_avg[2] + x4 * self.setosa_avg[3] - (setosa_w0 / 2)
-        d2 = x1 * self.versicolor_avg[0] + x2 * self.versicolor_avg[1] + x3 * self.versicolor_avg[2] + x4 * self.versicolor_avg[3] - (versicolor_w0 / 2)
+        d1 = x1 * self.class1_avg[0] + x2 * self.class1_avg[1] + x3 * self.class1_avg[2] + x4 * self.class1_avg[3] - (class1_w0 / 2)
+        d2 = x1 * self.class2_avg[0] + x2 * self.class2_avg[1] + x3 * self.class2_avg[2] + x4 * self.class2_avg[3] - (class2_w0 / 2)
 
         return (d1 + d2) / 2
 
@@ -44,7 +45,7 @@ class MinimumDistance(ModelInterface):
         return self.classify(row)
 
     def get_equation(self):
-      return f'Decision Boundary Equation: x1 * {round(self.setosa_avg[0], 2)} + x2 * {round(self.setosa_avg[1], 2)} + x3 * {round(self.setosa_avg[2], 2)} + x4 * {round(self.setosa_avg[3], 2)} - {round(((self.versicolor_avg[0] * self.versicolor_avg[0]) + (self.versicolor_avg[1] * self.versicolor_avg[1]) + (self.versicolor_avg[2] * self.versicolor_avg[2]) + (self.versicolor_avg[3] * self.versicolor_avg[3]))/ 4, 2)}'
+      return f'Decision Boundary Equation: x1 * {round(self.class1_avg[0], 2)} + x2 * {round(self.class1_avg[1], 2)} + x3 * {round(self.class1_avg[2], 2)} + x4 * {round(self.class1_avg[3], 2)} - {round(((self.class2_avg[0] * self.class2_avg[0]) + (self.class2_avg[1] * self.class2_avg[1]) + (self.class2_avg[2] * self.class2_avg[2]) + (self.class2_avg[3] * self.class2_avg[3]))/ 4, 2)}'
 
     def get_grid_values(self, data_df, columns):
 

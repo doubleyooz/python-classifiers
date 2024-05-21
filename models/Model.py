@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 
 class ModelInterface(ABC):
-    def __init__(self, setosa_avg, versicolor_avg):
-        self.setosa_avg = setosa_avg
-        self.versicolor_avg = versicolor_avg
+    def __init__(self, class1_avg, class2_avg, pairs=['setosa', 'versicolor']):
+        self.class1_avg = class1_avg
+        self.class2_avg = class2_avg
+        self.pairs = pairs
 
     @abstractmethod
     def decision_function(self, row):
@@ -12,10 +13,6 @@ class ModelInterface(ABC):
 
     @abstractmethod
     def classify(self, row):
-        pass
-
-    @abstractmethod
-    def surface(self, row):
         pass
 
     @abstractmethod
