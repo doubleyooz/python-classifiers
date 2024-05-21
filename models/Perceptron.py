@@ -18,7 +18,7 @@ class Perceptron(ModelInterface):
 
     def fit(self, x, y):
         n_samples, n_features = x.shape
-
+    
         # init parameters
         self.weights = np.zeros(n_features)
 
@@ -31,10 +31,9 @@ class Perceptron(ModelInterface):
                 # Ensure x_i is a numpy array
                 if type(x_i) is not np.ndarray:
                   x_i = np.array(x_i)
-
-                linear_output = np.dot(x_i, self.weights) # x * w0
-                y_predicted = self.decision_function(linear_output)
-
+          
+                y_predicted = self.decision_function(x_i)
+              
                 # Perceptron update rule
                 if y_predicted <= 0:
                   update = self.weights if y_[index] == 0 else self.weights + self.lr * x_i * 1
@@ -42,8 +41,9 @@ class Perceptron(ModelInterface):
                 else:
                   update = self.weights if y_[index] == 1 else self.weights + self.lr * x_i * -1
                 self.weights = update
-                print(update)
-                error += int(update != 0)
+            
+                
+                error = any(x == 0 for x in update)
             self.errors.append(error)
         return self
    
@@ -76,7 +76,7 @@ class Perceptron(ModelInterface):
     
 
     def decision_function(self, x):
-        linear_output = np.dot(x, self.weights)
+        linear_output = np.dot(x, self.weights) # x * w0
         # y_predicted = self.decision_function(linear_output)
         return self._unit_step_func(linear_output)
 
