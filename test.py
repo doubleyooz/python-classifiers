@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix
 
 from models.Model import ModelInterface
 columns = ['Sepal length', 'Sepal width', 'Petal length', 'Petal width', 'Species', 'Predicted Species']
-def use_classifier (data2, classifier: ModelInterface, pairs, given_point=None):
+def use_classifier (data2, classifier: ModelInterface, pairs, given_point=None, old_entries=False):
    
 
     modified_df = data2.copy()
@@ -18,17 +18,21 @@ def use_classifier (data2, classifier: ModelInterface, pairs, given_point=None):
 
     modified_df[columns[4]] = modified_df[columns[4]].map({pairs[0]: 0, pairs[1]: 1})
     modified_df[columns[5]] = modified_df[columns[5]].map({pairs[0]: 0, pairs[1]: 1})
-    print(modified_df)
+   
   
     # Plot the data points
-    class1_df = modified_df[modified_df[columns[5]] == 0]
-    class2_df = modified_df[modified_df[columns[5]] == 1]
+    entries_index = 4 if old_entries else 5
+    class1_df = modified_df[modified_df[columns[entries_index]] == 0]
+    class2_df = modified_df[modified_df[columns[entries_index]] == 1]
 
     # Generate a grid over the feature space
+    
     values_grid = classifier.get_grid_values(modified_df, columns)
-    decision_function_values = classifier.get_decision_values(values_grid, columns)
+  
+    decision_function_values = classifier.get_decision_values(values_grid)
     # print(values_grid)
     # Calculate the decision function value for each point on the grid
+   
     decision_equation = classifier.get_equation()
 
     # Plot the decision boundary
@@ -83,7 +87,7 @@ def plot_cm(data2, classifier, pairs = ['setosa', 'versicolor']):
     data_df['Predicted Species'] = data_df.apply(classifier.classify, axis=1)
     mismatches = data_df[data_df['Species'] != data_df['Predicted Species']]
 
-    print(f'Errors found: {mismatches.size}')
+    print(f'Errors found: {len(mismatches)}')
     if(mismatches.size > 0):
         print(mismatches)
 

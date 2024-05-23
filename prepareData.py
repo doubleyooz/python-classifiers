@@ -39,13 +39,6 @@ data = non_versicolor_df.copy().sample(frac=0.7)
 # Get the remaining 30% of the data
 test = non_versicolor_df.copy().drop(data.index)
 
-print(f'Training data size: {data.size}')
-print(f'Testing data size: {test.size}')
-# Transform the 'Species' column to 0 or 1
-
-data = non_versicolor_df.copy()
-print(f'non_versicolor_df size: {non_versicolor_df.size}')
-
 def get_pairs(exclude):
     if exclude == 'virginica':
         data_df = non_virginica_df
@@ -62,6 +55,11 @@ def get_pairs(exclude):
     # Get the remaining 30% of the data
     test = data_df.copy().drop(data.index)
 
+    print(f'Training data size: {len(data)}')
+    print(f'Testing data size: {len(test)}')
+
+
+    print(f'non_{exclude}_df size: {len(data_df)}')
     return data, test
 
 

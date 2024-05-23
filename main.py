@@ -5,7 +5,8 @@ import pandas as pd
 
 import seaborn as sns
 
-from models.MinimumDistance import MinimumDistance
+from models.MinimumDistance4 import MinimumDistance4
+from models.MinimumDistance2 import MinimumDistance2
 from models.Perceptron import Perceptron
 from prepareData import get_pairs, setosa_avg, versicolor_avg, virginica_avg
 from test import use_classifier, plot_cm
@@ -56,12 +57,13 @@ use_classifier(test, c1, pairs=pairs, given_point=point)
 plot_cm(test, c1, pairs=pairs)
 
 '''
-data, test = get_pairs(exclude='versicolor')
-pairs = ['virginica', 'setosa']
+data, test = get_pairs(exclude='setosa')
+pairs = ['virginica', 'versicolor']
 # c1 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, pairs=pairs)
 # c2 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, pairs=pairs)
-p1 = Perceptron(learning_rate=0.01, n_iters=50, pairs=pairs)
-p1.fit2(data)
+p1 = Perceptron(learning_rate=0.01, max_iters=1200, pairs=pairs)
 
-use_classifier(test, p1, pairs=pairs, given_point=point)
+p1.fit(test)
+print(p1.weights)
+use_classifier(test, p1, pairs=pairs, given_point=point, old_entries=True)
 plot_cm(test, p1, pairs=pairs)
