@@ -1,5 +1,8 @@
 import pandas as pd
+import numpy as np
 from sklearn.metrics import confusion_matrix
+
+from models.MinimumDistance4 import MinimumDistance4
     
 path = './assets/Iris.csv'
 df = pd.read_csv(path)
@@ -39,18 +42,41 @@ data = non_versicolor_df.copy().sample(frac=0.7)
 # Get the remaining 30% of the data
 test = non_versicolor_df.copy().drop(data.index)
 
-def get_pairs(exclude):
-    if exclude == 'virginica':
-        data_df = non_virginica_df
-    elif exclude == 'setosa':
-        data_df = non_setosa_df
-    elif exclude == 'versicolor':
-        data_df = non_versicolor_df
-    else:
-        raise ValueError(f"Invalid exclude value: {exclude}")
+def get_pairs(exclude = 'virginica', random = False):
+    if random:
+        samples = 100
+        random_values = {
+            'Sepal length': np.random.uniform(0.5, 10, samples),
+            'Sepal width': np.random.uniform(0.5, 10, samples),
+            'Petal length': np.random.uniform(0.5, 10, samples),
+            'Petal width': np.random.uniform(0.5, 10, samples)
+        }
+
+        # Create the DataFrame
+        data_df = pd.DataFrame(random_values)        
+        pairs = ['virginica', 'setosa', 'versicolor']
+        excluded_index = pairs.index(exclude)
+        pairs.remove(exclude)
+        avg_list = [virginica_avg, setosa_avg, versicolor_avg ]
+        del avg_list[excluded_index]
+
+        c1 = MinimumDistance4(class1_avg=avg_list[0], class2_avg=avg_list[1], pairs=pairs)
+        data_df['Species'] = data_df.apply(c1.classify, axis=1)
+    else: 
+        if exclude == 'virginica':
+            data_df = non_virginica_df
+        elif exclude == 'setosa':
+            data_df = non_setosa_df
+        elif exclude == 'versicolor':
+            data_df = non_versicolor_df
+        else:
+            raise ValueError(f"Invalid exclude value: {exclude}")
+
+
+ 
 
     # Randomly sample 70% of your dataframe
-    data = data_df.copy().sample(frac=0.7)
+    data = data_df.copy().sample(frac=0.7, random_state=37)
 
     # Get the remaining 30% of the data
     test = data_df.copy().drop(data.index)
@@ -62,6 +88,20 @@ def get_pairs(exclude):
     print(f'non_{exclude}_df size: {len(data_df)}')
     return data, test
 
+
+
+def load_csv(self, filepath):
+    # Open a file dialog to select a CSV file
+   
+    if filepath:
+        try:
+            # Read the CSV file into a DataFrame
+            df = pd.read_csv(filepath)
+            print(df.head())  # Display the first few rows of the DataFrame
+        except pd.errors.EmptyDataError:
+            print("The selected file is empty.")
+        except pd.errors.ParserError:
+            print("Error parsing the CSV file. Please check the file format.")
 
 
 # petal width and petal length are basically the same so I taking one of them out

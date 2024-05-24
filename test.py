@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
+from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
 
 from models.Model import ModelInterface
@@ -104,3 +104,8 @@ def plot_cm(data2, classifier, pairs = ['setosa', 'versicolor']):
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.show()
+
+    f1_macro = f1_score(data_df['Species'], data_df['Predicted Species'], average='macro')
+    f1_micro = f1_score(data_df['Species'], data_df['Predicted Species'], average='micro')
+    f1_weighted = f1_score(data_df['Species'], data_df['Predicted Species'], average='weighted')
+    print(f1_macro, f1_micro, f1_weighted)

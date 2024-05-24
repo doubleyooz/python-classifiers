@@ -1,9 +1,7 @@
-
-from matplotlib import pyplot as plt
-import numpy as np
-import pandas as pd
-
-import seaborn as sns
+import sys
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtCore import QObject, Slot
 
 from models.MinimumDistance4 import MinimumDistance4
 from models.MinimumDistance2 import MinimumDistance2
@@ -12,58 +10,66 @@ from prepareData import get_pairs, setosa_avg, versicolor_avg, virginica_avg
 from test import use_classifier, plot_cm
 
 
-def use_perceptron(data2):
-  # Data retrieval and preperation.
-  data_temp = data2.copy()
-  x = data_temp.iloc[0:100, [0, 1, 2, 3]].values
-  plt.scatter(x[:50, 0], x[:50, 1], color='red')
-  plt.scatter(x[50:100, 0], x[50:100, 1], color='blue')
-  plt.scatter(x[100:150, 0], x[100:150, 1], color='yellow')
-  plt.show()
+class MyPythonObject(QObject):
+    @Slot()
+    def my_python_object(self):
+        point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
+        data, test = get_pairs(exclude='setosa', random=False)
+        pairs = ['virginica', 'versicolor']
+        p1 = Perceptron(learning_rate=0.01, max_iters=1200, pairs=pairs)
+        p1.fit(test)
+        print(p1.weights)
+        # Call other functions or perform additional actions here
 
-  data_temp = data_temp.iloc[0:100, 4].values
-  data_temp = np.where(data_temp == 'setosa', -1, 1)
+# Create an instance of your Python object
+my_python_object = MyPythonObject()
 
-  # Model training and evaluation.
-  
-  p1.fit(x, data_temp)
-  plt.plot(range(1, len(p1.errors) + 1), p1.errors, marker='o')
-  plt.xlabel('Epochs')
-  plt.ylabel('Number of misclassifications')
-  plt.show()
-  print(x.shape) # prints (100, 4)
-  # x = x[:, :2]
-  # plot_decision_regions(x, data_temp, p1=p1)
-  # Showing the final results of the perceptron model.
-  # plt.show()
+QML = """
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
+Window {
+    width: 800
+    height: 800
+    visible: true
+    title: "Hello World"
 
-point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
+    readonly property list<string> texts: ["Hallo Welt", "Hei maailma",
+                                           "Hola Mundo", "Привет мир"]
 
-'''
-data, test = get_pairs(exclude='virginica')
-pairs = ['setosa', 'versicolor']
-c1 = MinimumDistance(class1_avg=setosa_avg, class2_avg=versicolor_avg)
-use_classifier(data, c1, pairs=pairs, given_point=point)
-use_classifier(test, c1, pairs=pairs, given_point=point)
-plot_cm(test, c1, pairs=pairs)
-'''
-'''
-data, test = get_pairs(exclude='versicolor')
-pairs = ['virginica', 'setosa']
-c1 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, pairs=pairs)
-use_classifier(data, c1, pairs=pairs, given_point=point)
-use_classifier(test, c1, pairs=pairs, given_point=point)
-plot_cm(test, c1, pairs=pairs)
+    function setText() {
+        var i = Math.round(Math.random() * 3)
+        text.text = texts[i]
+    }
 
-'''
-data, test = get_pairs(exclude='setosa')
-pairs = ['virginica', 'versicolor']
-# c1 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, pairs=pairs)
-# c2 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, pairs=pairs)
-p1 = Perceptron(learning_rate=0.01, max_iters=1200, pairs=pairs)
+    ColumnLayout {
+        anchors.fill:  parent
 
-p1.fit(test)
-print(p1.weights)
-use_classifier(test, p1, pairs=pairs, given_point=point, old_entries=True)
-plot_cm(test, p1, pairs=pairs)
+        Text {
+            id: text
+            text: "Hello World"
+            Layout.alignment: Qt.AlignHCenter
+        }
+        Button {
+            text: "Click me"
+            Layout.alignment: Qt.AlignHCenter
+            onClicked:  myPythonObject.my_python_object()
+        }
+    }
+}
+"""
+
+if __name__ == "__main__":
+    app = QGuiApplication(sys.argv)
+    engine = QQmlApplicationEngine()
+
+    # Register the Python object
+    engine.rootContext().setContextProperty("myPythonObject", my_python_object)
+
+    engine.loadData(QML.encode('utf-8'))
+    if not engine.rootObjects():
+        sys.exit(-1)
+    exit_code = app.exec()
+    del engine
+    sys.exit(exit_code)

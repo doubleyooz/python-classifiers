@@ -15,17 +15,18 @@ class MinimumDistance4(ModelInterface):
       x2 = row[self.columns[1]]
       x3 = row[self.columns[2]]
       x4 = row[self.columns[3]]
-
+    
       class1_w0 = sum(val ** 2 for val in self.class1_avg)
       class2_w0 = sum(val ** 2 for val in self.class2_avg)
 
       d1 = x1 * self.class1_avg[0] + x2 * self.class1_avg[1] + x3 * self.class1_avg[2] + x4 * self.class1_avg[3] - (class1_w0 / 2)
       d2 = x1 * self.class2_avg[0] + x2 * self.class2_avg[1] + x3 * self.class2_avg[2] + x4 * self.class2_avg[3] - (class2_w0 / 2)
 
-
+    
       return (d1 - d2)
 
     def classify(self, row):
+      print(self.pairs[0] if self.decision_function(row) > 0 else self.pairs[1])
       return self.pairs[0] if self.decision_function(row) > 0 else self.pairs[1]
 
     def surface(self, row):
