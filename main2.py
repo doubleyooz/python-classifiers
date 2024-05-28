@@ -25,7 +25,11 @@ from PySide6.QtWidgets import (
 
 
 from prepareData import load_csv 
+from test import use_classifier, plot_cm
 from styles import white, primary_colour, secondary_colour 
+from models.MinimumDistance4 import MinimumDistance4
+from models.MinimumDistance2 import MinimumDistance2
+from models.Perceptron import Perceptron
 
 class MainWindow(QMainWindow):
   
@@ -36,16 +40,24 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 832, 624)
         self.model_selector =  QComboBox()
         self.models = [
-            'MinimumDistance4',
-            'Perceptron', 
+            { 'MinimumDistance4': MinimumDistance4},
+            { 'MinimumDistance2': MinimumDistance2},
+            { 'Perceptron': Perceptron}, 
             
         ]
+        self.model_names = [list(d.keys())[0] for d in self.models]
+
+        self.point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
+        self.pairs = ['virginica', 'versicolor']
 
 
+
+        self.classifiers = []
         self.status = QStatusBar()
         self.setStatusBar(self.status)
         self.save_path = ""
-        
+
+
         self.toolbox()
         self.sidebar()    
          
@@ -82,7 +94,7 @@ class MainWindow(QMainWindow):
         change_folder_action.triggered.connect(self.change_folder)
         toolbar.addAction(change_folder_action)
         
-        self.model_selector.addItems(self.models)
+        self.model_selector.addItems(self.model_names)
         self.model_selector.currentIndexChanged.connect(self.update_learning_rate_visibility)
 
         toolbar.addWidget(self.model_selector)   
@@ -96,8 +108,8 @@ class MainWindow(QMainWindow):
         # Add buttons to the sidebar
         layout = QVBoxLayout(self.sidebar)
         
-        self.add_menu_item(layout, "Source Control", "code-fork", self.show_source_control)
-        self.add_menu_item(layout, "Extensions", "puzzle-piece", self.show_extensions)
+        self.add_menu_item(layout, "use_classifier", "code-fork", use_classifier(data2=self.df, classifier= ))
+        self.add_menu_item(layout, "plot_cm", "puzzle-piece", plot_cm)
         
         
         self.lbl_integer = QLabel("Integer Validator")
@@ -136,7 +148,7 @@ class MainWindow(QMainWindow):
     def load_csv(self):
         # Open a file dialog to select a CSV file
         file_path, _ = QFileDialog.getOpenFileName(self, "Select CSV File", "", "CSV Files (*.csv)")
-
+    
         if file_path:
             try:
                 # Read the CSV file into a DataFrame

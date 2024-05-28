@@ -46,10 +46,10 @@ class MinimumDistance2(ModelInterface):
   def get_equation(self):
     return f'Decision Boundary Equation: x1 * {round(self.class1_avg[0], 2)} + x2 * {round(self.class1_avg[1], 2)} - {round(((self.class2_avg[0] * self.class2_avg[0]) + (self.class2_avg[1] * self.class2_avg[1]))/ 4, 2)}'
 
-  def get_grid_values(self, data_df, columns):
+  def get_grid_values(self, data_df):
 
-    x1_values = np.linspace(data_df[columns[0]].min(), data_df[columns[0]].max(), 100)
-    x2_values = np.linspace(data_df[columns[1]].min(), data_df[columns[1]].max(), 100)
+    x1_values = np.linspace(data_df[self.columns[0]].min(), data_df[self.columns[0]].max(), 100)
+    x2_values = np.linspace(data_df[self.columns[1]].min(), data_df[self.columns[1]].max(), 100)
 
     x1_grid, x2_grid = np.meshgrid(x1_values, x2_values)
     return {'x1': x1_grid, 'x2': x2_grid }
@@ -59,8 +59,8 @@ class MinimumDistance2(ModelInterface):
     array_2d = values.reshape((100, 100))
     return array_2d
   
-  def get_decision_values(self, grid, columns):
-    values = np.array([self.surface({columns[0]: x1, columns[1]: x2}) for x1, x2, in zip(np.ravel(grid['x1']), np.ravel(grid['x2']))])
+  def get_decision_values(self, grid):
+    values = np.array([self.surface({self.columns[0]: x1, self.columns[1]: x2}) for x1, x2, in zip(np.ravel(grid['x1']), np.ravel(grid['x2']))])
     array_2d = values.reshape((100, 100))
     return array_2d
   

@@ -7,7 +7,7 @@ class Perceptron(ModelInterface):
     self.lr = learning_rate
     self.max_iters = max_iters
     self.pairs = pairs
-    self.bias = None
+    self.bias = 0
     self.columns = columns
     self.point_names = point_names
     self.errors = []
@@ -83,12 +83,12 @@ class Perceptron(ModelInterface):
     y_predicted = self.decision_function(linear_output)
     return y_predicted
   
-  def get_grid_values(self, data_df, columns):
+  def get_grid_values(self, data_df):
 
-    x1_values = np.linspace(data_df[columns[0]].min(), data_df[columns[0]].max(), 100)
-    x2_values = np.linspace(data_df[columns[1]].min(), data_df[columns[1]].max(), 100)
-    x3_values = np.linspace(data_df[columns[2]].min(), data_df[columns[2]].max(), 100)
-    x4_values = np.linspace(data_df[columns[3]].min(), data_df[columns[3]].max(), 100)
+    x1_values = np.linspace(data_df[self.columns[0]].min(), data_df[self.columns[0]].max(), 100)
+    x2_values = np.linspace(data_df[self.columns[1]].min(), data_df[self.columns[1]].max(), 100)
+    x3_values = np.linspace(data_df[self.columns[2]].min(), data_df[self.columns[2]].max(), 100)
+    x4_values = np.linspace(data_df[self.columns[3]].min(), data_df[self.columns[3]].max(), 100)
 
     x1_grid, x2_grid = np.meshgrid(x1_values, x2_values)
     x3_grid, x4_grid = np.meshgrid(x3_values, x4_values)
