@@ -10,7 +10,7 @@ from models.MinimumDistance2 import MinimumDistance2
 from models.Perceptron import Perceptron
 from models.MaxNaiveBayes import MaxNaiveBayes
 from prepareData import get_pairs, get_averages
-from test import use_classifier, plot_cm, use_classifier2, plot_cm2, print_metrics
+from test import use_classifier, plot_cm, plot_cm2, print_metrics
 
 point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
 
@@ -122,7 +122,7 @@ def main():
                 
 
                 if selected_model == "Perceptron":
-                    use_perceptron(selected_model=selected_model, selected_pairs=selected_pair['pairs'], selected_dataset=selected_dataset, exclude=selected_pair['exclude'])
+                    use_perceptron(selected_model=selected_model, selected_pair=selected_pair['pairs'], selected_dataset=selected_dataset, exclude=selected_pair['exclude'])
 
                 elif any(selected_model in x for x in ["MinimumDistance4", "MinimumDistance2"]):
                     use_minimum_distance_classifier(selected_model=selected_model, selected_dataset=selected_dataset, selected_pair=selected_pair['pairs'], class1_avg_list=class1_avg_list, class2_avg_list=class2_avg_list)
@@ -193,13 +193,13 @@ def use_perceptron(selected_model, selected_pair, selected_dataset, exclude):
         
         if selected_option == 0:
             print(f'{title}: classify')
-            use_classifier(dataset, p1)
+            use_classifier(selected_dataset['dataset'], p1)
         elif selected_option == 1:
             print(f'{title}: fit')
             data, test, class1_df, class2_df, opposite_data_df = get_pairs(exclude=exclude, pairs=selected_pair, overwrite_classes=True)
-            if selected_dataset == 0:
+            if selected_dataset['title'] == 'training':
                 dataset = data
-            elif selected_dataset == 1:
+            elif selected_dataset['title'] == 'test':
                 dataset = test
             else: 
                 dataset = pd.concat([data, test])
@@ -207,13 +207,13 @@ def use_perceptron(selected_model, selected_pair, selected_dataset, exclude):
             p1.fit(dataset)
         elif selected_option == 2:
             print(f'{title}: predict')
-            use_classifier(dataset, p1, given_point=point)
+            use_classifier(selected_dataset['dataset'], p1, given_point=point)
         elif selected_option == 3:  
             print(f'{title}: confusion_matrix')                       
-            plot_cm(dataset, p1)
+            plot_cm(selected_dataset['dataset'], p1)
         else:  
             print(f'{title}: predict')
-            print_metrics(dataset, p1)
+            print_metrics(selected_dataset['dataset'], p1)
             
 
 
@@ -221,31 +221,27 @@ def use_perceptron(selected_model, selected_pair, selected_dataset, exclude):
 def use_bayes(selected_model, selected_pair, selected_dataset):
     print(len(selected_dataset['dataset']))
   
-    bayes_1 = MaxNaiveBayes(learning_rate=0.01, max_iters=1200, pairs=selected_pair)
+    bayes_1 = MaxNaiveBayes(pairs=selected_pair)
 
     while True:
         title = f'\n{selected_model} - {selected_pair} - {selected_dataset['title']}'
         print(title)
-        actions_list = ['classify', 'fit', 'predict_point', 'confusion_matrix', 'print_metrics']
+        bayes_1.initialise(df=selected_dataset['dataset'].copy(), Y='Species')
+        actions_list = ['classify', 'predict_point', 'confusion_matrix', 'print_metrics']
         selected_option = show_menu_options("Select action:", menu=actions_list)
         if selected_option == len(actions_list):
             break
         
         if selected_option == 0:
             print(f'{title}: classify')
-            use_classifier2(selected_dataset['dataset'], bayes_1, decision_boundary=True)
-        elif selected_option == 1:
-            print(f'{title}: fit')
-            original_df = selected_dataset['dataset'].copy()
-            # original_df['Species'] = original_df['Species'].map({bayes_1.pairs[0]: 0, bayes_1.pairs[1]: 1})
-
-            bayes_1.fit(df=original_df, Y='Species')
-        elif selected_option == 2:                
+            use_classifier(selected_dataset['dataset'], bayes_1, decision_boundary=True)
+      
+        elif selected_option == 1:                
             print(f'{title}: predict')
-            use_classifier2(selected_dataset['dataset'], bayes_1, given_point=point, decision_boundary=False)
-        elif selected_option == 3:                
+            use_classifier(selected_dataset['dataset'], bayes_1, given_point=point, decision_boundary=True)
+        elif selected_option == 2:                
             print(f'{title}: confusion_matrix')                       
-            plot_cm2(selected_dataset['dataset'], bayes_1)
+            plot_cm(selected_dataset['dataset'], bayes_1)
         else:  
             print(f'{title}: predict')
             print_metrics(selected_dataset['dataset'], bayes_1)

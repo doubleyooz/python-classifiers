@@ -3,9 +3,8 @@ from models.Model import ModelInterface
 from utils import _unit_step_func
 
 class MaxNaiveBayes(ModelInterface):
-    def __init__(self, learning_rate=0.01, max_iters=1000, pairs=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width', 'Petal length', 'Petal width'], point_names=['x1', 'x2', 'x3', 'x4']):
-        self.lr = learning_rate
-        self.max_iters = max_iters
+    def __init__(self, pairs=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width', 'Petal length', 'Petal width'], point_names=['x1', 'x2', 'x3', 'x4']):
+        
         self.pairs = pairs
        
         self.means = {}
@@ -16,7 +15,7 @@ class MaxNaiveBayes(ModelInterface):
         self.point_names = point_names
         self.errors = []
 
-    def fit (self, df, Y, columns_ignored = -1):
+    def initialise (self, df, Y, columns_ignored = -1):
         # the final column must refer to the classes
         df_copy = df.copy()        
         self.columns = list(df_copy.columns[: columns_ignored])

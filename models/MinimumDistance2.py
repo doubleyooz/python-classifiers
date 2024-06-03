@@ -47,8 +47,7 @@ class MinimumDistance2(ModelInterface):
     return f'Decision Boundary Equation: x1 * {round(self.class1_avg[0], 2)} + x2 * {round(self.class1_avg[1], 2)} - {round(((self.class2_avg[0] * self.class2_avg[0]) + (self.class2_avg[1] * self.class2_avg[1]))/ 4, 2)}'
 
 
-  def get_decision_values(self, grid):   
-    print(grid)
+  def get_decision_values(self, grid):      
     values = np.array([self.decision_function({self.columns[0]: x1, self.columns[1]: x2}) for x1, x2, in zip(np.ravel(grid['x1']), np.ravel(grid['x2']))])
     array_2d = values.reshape((100, 100))
     return array_2d
