@@ -25,9 +25,5 @@ class ModelInterface(ABC):
         pass
 
     @abstractmethod
-    def get_grid_values(self, data_df, columns):
-        pass
-
-    @abstractmethod
     def get_decision_values(self, grid, columns):
         pass

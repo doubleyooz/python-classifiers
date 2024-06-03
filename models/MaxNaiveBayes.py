@@ -7,16 +7,37 @@ class MaxNaiveBayes(ModelInterface):
         self.lr = learning_rate
         self.max_iters = max_iters
         self.pairs = pairs
-        self.bias = None
+       
+        self.means = {}
+        self.std = {}
+        self.prior = []
+       
         self.columns = columns
         self.point_names = point_names
         self.errors = []
 
+    def fit (self, df, Y, columns_ignored = -1):
+        # the final column must refer to the classes
+        df_copy = df.copy()        
+        self.columns = list(df_copy.columns[: columns_ignored])
+        self.point_names = ['x' + str(i) for i in range(1, len(self.columns) + 1)]
+        self.pairs = sorted(list(df_copy[Y].unique()))
+        self.means = {cl: {feat_name: None for feat_name in self.columns} for cl in self.pairs}
+        self.std = {cl: {feat_name: None for feat_name in self.columns} for cl in self.pairs}
+        # number_of_classes = len(class_labels)
+        
+        for label in self.pairs:
+            df_feature = df_copy[df_copy[Y] == label] # it extracts all the datapoints where the Y value is the given label
+            self.prior.append(len(df_feature)/len(df_copy)) # calculate the prior probability for each class. We're dividing the number of samples where Y = y by the total of samples
+            for feat_name in self.columns:
+             
+                self.means[label][feat_name] = df_feature[feat_name].mean()
+                self.std[label][feat_name] = df_feature[feat_name].std()
 
-    def classify(self, row):
-        result = [row[col] for col in self.columns]
 
-        return self.pairs[0] if self.decision_function(result) > 0 else self.pairs[1]
+    def classify(self, row): 
+
+        return self.pairs[0] if np.argmax(self.decision_function(row)) < 1 else self.pairs[1]
 
 
     def get_equation(self):
@@ -31,79 +52,60 @@ class MaxNaiveBayes(ModelInterface):
         return self.classify(row)
 
 
-    def predict_point(self, x, y):
-        linear_output = np.dot([x,y], self.weights)
-        y_predicted = self.decision_function(linear_output)
-        return y_predicted
-
-
     def get_decision_values(self, grid):
-        values = np.array([self.decision_function({self.columns[0]: x1, self.columns[1]: x2, self.columns[2]: x3, self.columns[3]: x4}) for x1, x2, x3, x4 in zip(np.ravel(grid['x1']), np.ravel(grid['x2']), np.ravel(grid['x3']), np.ravel(grid['x4']))])
+        result = [(np.argmax(self.decision_function({self.columns[0]: x1, self.columns[1]: x2, self.columns[2]: x3, self.columns[3]: x4}))) for x1, x2, x3, x4 in zip(*[np.ravel(grid[name]) for name in self.point_names])]
+        values = np.array(result)
         array_2d = values.reshape((100, 100))
         return array_2d
 
 
     def decision_function(self, x):
-        linear_output = np.dot(x, self.weights) + self.bias# x * w0, missing bias
+       
+        # calculate likelihood    
+        number_of_classes = len(self.pairs)   
+   
+        likelihood = [1]* number_of_classes
 
-        return _unit_step_func(linear_output)
+        for j in range(number_of_classes): # loop over every class
 
+            for i in self.columns:   # loop over every feature
+                # multiply individual conditional probabilities to get the likelihood
+                # print(i, x[i], self.pairs[j])
+                    
+                                                                    # feature_name,   val, 'class'   
+                likelihood[j] *= self._calculate_likelihood_gaussian(i, x[i], self.pairs[j])
 
-    def get_grid_values(self, data_df):
+        # calculate posterior probability (numerator only)
+        post_prob = [1]*number_of_classes
 
-        x1_values = np.linspace(data_df[self.columns[0]].min(), data_df[self.columns[0]].max(), 100)
-        x2_values = np.linspace(data_df[self.columns[1]].min(), data_df[self.columns[1]].max(), 100)
-        x3_values = np.linspace(data_df[self.columns[2]].min(), data_df[self.columns[2]].max(), 100)
-        x4_values = np.linspace(data_df[self.columns[3]].min(), data_df[self.columns[3]].max(), 100)
-
-        x1_grid, x2_grid = np.meshgrid(x1_values, x2_values)
-        x3_grid, x4_grid = np.meshgrid(x3_values, x4_values)
-        return {'x1': x1_grid, 'x2': x2_grid, 'x3': x3_grid, 'x4':  x4_grid}
+        # loop over all classes
+        for j in range(number_of_classes):
+            post_prob[j] = likelihood[j] * self.prior[j]
     
-    # calculate all prior probabilities. We're dividing the number of samples where Y = y by the total of samples
-    def _calculate_prior(self, df, Y):
-        classes = sorted(list(df[Y].unique()))
-        prior = []
-        for i in classes:
-            prior.append(len(df[df[Y] ==i])/len(df))
-        return prior
+        return post_prob
+   
 
-    def _calculate_likelihood_gaussian(self, df, feat_name, feat_val, Y, label):
-        feat = list(df.columns) # it extracts all features names then
-        df = df[df[Y] == label] # it extracts all the datapoints where the Y value is the given label
-        mean, std = df[feat_name].mean(), df[feat_name].std() # mean and standard deviation
+    def _calculate_likelihood_gaussian(self, feat_name, feat_val, class_label):     
+        mean = self.means[class_label][feat_name]
+        std = self.std[class_label][feat_name]
         p_x_given_y = (1 / (np.sqrt(2 * np.pi) * std) * np.exp(-((feat_val-mean)**2) / (2 * std**2))) # normal distribution
         return p_x_given_y
     
-    def _naive_bayes_gaussian(self, df, X, Y):
-        # get feature names
-        features = list(df.columns[: -1])
+    def _naive_bayes_gaussian(self, X):
+       
+        Y_pred = []              
 
-        #calculate the probability for each class
-        prior = self._calculate_prior(df, Y)
-
-        Y_pred = []
-
-        #loop over every data sample
+        #loop over every data sample    
         for x in X:
-            # calculate likelihood
-            labels = sorted(list(df[Y].unique()))
-            labels_length = len(labels)
-            likelihood = [1]* labels_length
-
-            for j in range(labels_length): # loop over every class
-
-                for i in range(len(features)):   # loop over every feature
-                    # multiply individual conditional probabilities to get the likelihood
-                    likelihood[j] *= self._calculate_likelihood_gaussian(df, features[i], x[i], Y, labels[j])
-
-            # calculate posterior probability (numerator only)
-            post_prob = [1]*labels_length
-
-            # loop over all classes
-            for j in range(labels_length):
-                post_prob[j] = likelihood[j] * prior[j]
-
+            # calculate likelihood       
+         
+            x_dict = {}
+            if(type(x) is np.ndarray):
+                for i in range(len(self.columns)):
+                    x_dict[self.columns[i]] = x[i]
+            else:
+                x_dict = x
+            post_prob = self.decision_function(x_dict)
             Y_pred.append(np.argmax(post_prob)) # add to the returning array the class where the posterior probability is the highest
 
         return np.array(Y_pred)

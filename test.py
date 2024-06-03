@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from sklearn.metrics import confusion_matrix, f1_score, cohen_kappa_score, matthews_corrcoef, tau_b
+from sklearn.metrics import confusion_matrix, f1_score, cohen_kappa_score, matthews_corrcoef
 
 
 from models.Model import ModelInterface
 from models.MaxNaiveBayes import MaxNaiveBayes
+from utils import get_grid_values
 columns = ['Sepal length', 'Sepal width', 'Petal length', 'Petal width', 'Species', 'Predicted Species']
 def use_classifier (data2, classifier: ModelInterface, given_point=None, old_entries=False):
    
@@ -34,8 +35,8 @@ def use_classifier (data2, classifier: ModelInterface, given_point=None, old_ent
 
     # Generate a grid over the feature space
     
-    values_grid = classifier.get_grid_values(modified_df)
-  
+    values_grid = get_grid_values(modified_df, columns=classifier.columns)
+
     decision_function_values = classifier.get_decision_values(values_grid)
    
     # Calculate the decision function value for each point on the grid
@@ -91,34 +92,32 @@ def use_classifier (data2, classifier: ModelInterface, given_point=None, old_ent
 
 def use_classifier2 (data2, classifier: MaxNaiveBayes, given_point=None, old_entries=False, decision_boundary=True):
    
-  
     modified_df = data2.copy()
-    original_df = data2.copy()
 
-    print(f'DATA SIZE: {len(original_df)}')
-    print(original_df.head(10))
-    print(original_df.tail(10))
+    print(f'DATA SIZE: {len(modified_df)}')
+    print(modified_df.head(10))
+    print(modified_df.tail(10))
     print(classifier.columns)
 
-    original_df[columns[4]] = original_df[columns[4]].map({classifier.pairs[0]: 0, classifier.pairs[1]: 1})
+    # Create a dictionary to map class names to numerical values
+    class_mapping = {classifier.pairs[0]: 0, classifier.pairs[1]: 1}
+   
+    # Calculate the distance for each point on the grid   
+    X_test = modified_df.iloc[:, :-1].values  # Features (all columns except the last one)
+    Y_test = modified_df.iloc[:, -1].values   # Labels (last column)
+   
+   
 
-   
-   
     # Calculate the distance for each point on the grid
-   
-    X_test = original_df.iloc[:, :-1].values  # Features (all columns except the last one)
-    Y_test = original_df.iloc[:, -1].values   # Labels (last column)
-    print(original_df)
-   
-
-
-     # Calculate the distance for each point on the grid
-    modified_df[columns[5]] =classifier._naive_bayes_gaussian(df=original_df, X=X_test, Y=columns[4])
-
-    modified_df[columns[4]] = modified_df[columns[4]].map({classifier.pairs[0]: 0, classifier.pairs[1]: 1})
+    classifier.fit(modified_df, columns[4])
+    modified_df[columns[5]] = classifier._naive_bayes_gaussian(X=X_test)
     
-    print(Y_test)
-    print(modified_df[columns[5]])
+  
+ 
+    # Apply the mapping to Y_test
+    Y_test = [class_mapping[class_name] for class_name in Y_test]
+    
+    print(modified_df.head(10))
    
     print(confusion_matrix(Y_test, modified_df[columns[5]]))
     print(f1_score(Y_test, modified_df[columns[5]]))
@@ -129,11 +128,9 @@ def use_classifier2 (data2, classifier: MaxNaiveBayes, given_point=None, old_ent
     class1_df = modified_df[modified_df[columns[entries_index]] == 0]
     class2_df = modified_df[modified_df[columns[entries_index]] == 1]
 
-    # Generate a grid over the feature space
    
    
-    # Calculate the decision function value for each point on the grid
-   
+    # Calculate the decision function value for each point on the grid   
     decision_equation = classifier.get_equation()
 
     # Plot the decision boundary
@@ -141,7 +138,7 @@ def use_classifier2 (data2, classifier: MaxNaiveBayes, given_point=None, old_ent
     plt.scatter(class1_df[columns[0]], class1_df[columns[1]], c='blue')
     plt.scatter(class2_df[columns[0]], class2_df[columns[1]], c='green')
 
-    values_grid = classifier.get_grid_values(modified_df)
+    values_grid = get_grid_values(modified_df, columns=classifier.columns)
     
     legend = [classifier.pairs[0], classifier.pairs[1], 'Decision Boundary']
 
@@ -208,8 +205,8 @@ def plot_cm2(data2, classifier):
    
 
 
-     # Calculate the distance for each point on the grid
-    modified_df[columns[5]] = classifier._naive_bayes_gaussian(df=original_df, X=X_test, Y=columns[4])
+    # Calculate the distance for each point on the grid
+    modified_df[columns[5]] = classifier._naive_bayes_gaussian(X=X_test)
 
     modified_df[columns[4]] = modified_df[columns[4]].map({classifier.pairs[0]: 0, classifier.pairs[1]: 1})
     
@@ -301,7 +298,3 @@ def print_metrics (data2, classifier):
     # Matthews correlation coefficient
     matthews = matthews_corrcoef(Y_test, Y_pred)
     print(f"Matthews Correlation Coefficient: {matthews:.4f}")
-
-    # Kendall's Tau-b
-    tau = tau_b(Y_test, Y_pred)
-    print(f"Kendall's Tau-b: {tau:.4f}")

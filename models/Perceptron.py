@@ -83,16 +83,7 @@ class Perceptron(ModelInterface):
     y_predicted = self.decision_function(linear_output)
     return y_predicted
   
-  def get_grid_values(self, data_df):
 
-    x1_values = np.linspace(data_df[self.columns[0]].min(), data_df[self.columns[0]].max(), 100)
-    x2_values = np.linspace(data_df[self.columns[1]].min(), data_df[self.columns[1]].max(), 100)
-    x3_values = np.linspace(data_df[self.columns[2]].min(), data_df[self.columns[2]].max(), 100)
-    x4_values = np.linspace(data_df[self.columns[3]].min(), data_df[self.columns[3]].max(), 100)
-
-    x1_grid, x2_grid = np.meshgrid(x1_values, x2_values)
-    x3_grid, x4_grid = np.meshgrid(x3_values, x4_values)
-    return {'x1': x1_grid, 'x2': x2_grid, 'x3': x3_grid, 'x4':  x4_grid}
 
   def get_decision_values(self, grid):
     result = [self.decision_function([x1, x2, x3, x4]) for x1, x2, x3, x4 in zip(*[np.ravel(grid[name]) for name in self.point_names])]

@@ -1,7 +1,7 @@
 pandas
 scikit-learn
 scikit-image
+scipy
 numpy
 seaborn
 matplotlib
-marimo

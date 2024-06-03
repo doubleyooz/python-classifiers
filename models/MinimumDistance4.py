@@ -52,16 +52,6 @@ class MinimumDistance4(ModelInterface):
     def get_equation(self):
       return f'Decision Boundary Equation: x1 * {round(self.class1_avg[0], 2)} + x2 * {round(self.class1_avg[1], 2)} + x3 * {round(self.class1_avg[2], 2)} + x4 * {round(self.class1_avg[3], 2)} - {round(((self.class2_avg[0] * self.class2_avg[0]) + (self.class2_avg[1] * self.class2_avg[1]) + (self.class2_avg[2] * self.class2_avg[2]) + (self.class2_avg[3] * self.class2_avg[3]))/ 4, 2)}'
 
-    def get_grid_values(self, data_df):
-
-      x1_values = np.linspace(data_df[self.columns[0]].min(), data_df[self.columns[0]].max(), 100)
-      x2_values = np.linspace(data_df[self.columns[1]].min(), data_df[self.columns[1]].max(), 100)
-      x3_values = np.linspace(data_df[self.columns[2]].min(), data_df[self.columns[2]].max(), 100)
-      x4_values = np.linspace(data_df[self.columns[3]].min(), data_df[self.columns[3]].max(), 100)
-
-      x1_grid, x2_grid = np.meshgrid(x1_values, x2_values)
-      x3_grid, x4_grid = np.meshgrid(x3_values, x4_values)
-      return {'x1': x1_grid, 'x2': x2_grid, 'x3': x3_grid, 'x4':  x4_grid}
 
     def get_decision_values(self, grid):
       values = np.array([self.decision_function({self.columns[0]: x1, self.columns[1]: x2, self.columns[2]: x3, self.columns[3]: x4}) for x1, x2, x3, x4 in zip(np.ravel(grid['x1']), np.ravel(grid['x2']), np.ravel(grid['x3']), np.ravel(grid['x4']))])
