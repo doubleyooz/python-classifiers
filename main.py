@@ -5,12 +5,13 @@ import pandas as pd
 
 import seaborn as sns
 
+from models.BackPropagation import NeuralNetwork
 from models.MinimumDistance4 import MinimumDistance4
 from models.MinimumDistance2 import MinimumDistance2
 from models.Perceptron import Perceptron
 from models.MaxNaiveBayes import MaxNaiveBayes
 from prepareData import get_pairs, get_averages
-from test import use_classifier, plot_cm, plot_cm2, print_metrics
+from test import use_classifier, plot_cm, print_metrics
 
 point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
 
@@ -46,7 +47,7 @@ plot_cm(test, p1, pairs=pairs)
 
     '''
 def main():
-    menu = ["MinimumDistance4", "MinimumDistance2", "Perceptron", "MaxBayes"]
+    menu = ["MinimumDistance4", "MinimumDistance2", "Perceptron", "MaxBayes", "BackPropagation"]
     dict_pairs = {
         'versicolor - setosa': {
             'exclude': 'virginica',
@@ -129,6 +130,10 @@ def main():
               
                 elif selected_model == "MaxBayes":
                     use_bayes(selected_model=selected_model, selected_dataset=selected_dataset, selected_pair=selected_pair['pairs'])
+                
+                elif selected_model == 'BackPropagation':
+                    use_backpropagation(selected_model=selected_model, selected_dataset=selected_dataset, selected_pair=selected_pair['pairs'])
+                
 
 def show_menu_options(title, menu, last_option="Go back"):
     print(f'\n{title}')
@@ -246,6 +251,54 @@ def use_bayes(selected_model, selected_pair, selected_dataset):
             print(f'{title}: predict')
             print_metrics(selected_dataset['dataset'], bayes_1)
                   
+
+
+def use_backpropagation(selected_model, selected_pair, selected_dataset):
+    print(len(selected_dataset['dataset']))
+  
+    back_prop1 = NeuralNetwork(df=selected_dataset['dataset'].copy(), class_column='Species')
+
+    while True:
+        title = f'\n{selected_model} - {selected_pair} - {selected_dataset['title']}'
+        print(title)
+        # back_prop1.initialise(df=selected_dataset['dataset'].copy(), Y='Species')
+        actions_list = ['classify', 'predict_point', 'confusion_matrix', 'print_metrics']
+        selected_option = show_menu_options("Select action:", menu=actions_list)
+        if selected_option == len(actions_list):
+            break
+        
+        if selected_option == 0:
+            print(f'{title}: classify')
+            # use_classifier(selected_dataset['dataset'], back_prop1, decision_boundary=True)
+            
+            
+            modified_df = selected_dataset['dataset'].copy()
+            X_test = modified_df.iloc[:, :-1].values  # Features (all columns except the last one)
+            Y_test = modified_df.iloc[:, -1].values   # Labels (last column)
+            for i in range(1000): #trains the NN 1000 times
+                if (i % 100 == 0):
+                    print(f'y_test: {Y_test}, feedForward: {back_prop1.feedForward(X_test)}')
+                  
+                    print("Loss: " + str(np.mean(np.square(Y_test - back_prop1.feedForward(X_test)))))
+                back_prop1.train(X_test, Y_test)
+                    
+            print("Input: " + str(X_test))
+            print("Actual Output: " + str(Y_test))
+            print("Loss: " + str(np.mean(np.square(Y_test - back_prop1.feedForward(X_test)))))
+            print("\n")
+            print("Predicted Output: " + str(back_prop1.feedForward(X_test)))
+        '''
+        elif selected_option == 1:                
+            print(f'{title}: predict')
+            use_classifier(selected_dataset['dataset'], back_prop1, given_point=point, decision_boundary=True)
+        elif selected_option == 2:                
+            print(f'{title}: confusion_matrix')                       
+            plot_cm(selected_dataset['dataset'], back_prop1)
+        else:  
+            print(f'{title}: predict')
+            print_metrics(selected_dataset['dataset'], back_prop1)
+        '''
+  
 
 def select_pairs(pairs_list, dict_pairs):
     selected_option = show_menu_options("Select the pairs to be considered", menu=pairs_list)
