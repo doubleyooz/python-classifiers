@@ -10,6 +10,11 @@ class MinimumDistance2(ModelInterface):
     self.class_mapping = {class_label: idx for idx, class_label in enumerate(self.classes)}
     self.point_names = point_names
     self.columns = columns
+    self.metrics = {
+          'fscore': 0,
+          'kappa': 0,
+          'matthews': 0
+      }
 
   def decision_function(self, row):
       x1 = row[self.columns[0]]

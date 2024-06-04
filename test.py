@@ -9,13 +9,15 @@ from models.MaxNaiveBayes import MaxNaiveBayes
 from utils import get_grid_values
 columns = ['Sepal length', 'Sepal width', 'Petal length', 'Petal width', 'Species', 'Predicted Species']
 
-def extract_values(dataframe):
-    X_test = dataframe.iloc[:, :-1].values  # Features (all columns except the last one)
-    Y_test = dataframe.iloc[:, -1].values   # Labels (last column)
+def extract_values(dataframe, skip_columns=-1):
+    X_test = dataframe.iloc[:, :skip_columns].values  # Features (all columns except the last one)
+    Y_test = dataframe.iloc[:, skip_columns].values   # Labels (last column)
 
     return X_test, Y_test
    
-def map_values(values, class_mapping):
+def map_values(values, class_mapping, reverse=False):
+    if reverse:
+        {v: k for k, v in class_mapping.items()}
     return [class_mapping[class_name] for class_name in values]
 
 def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=False, decision_boundary=True):
@@ -109,20 +111,27 @@ def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=
 def plot_cm(data2, model):
     data_df = data2.copy()
 
+ 
+    
     #guarantees we have only two values
     data_df.loc[data_df[columns[4]] != model.classes[0], columns[4]] = model.classes[1]
-    print(len(data_df))
-    
-    # Apply the model to the test set
+    print(len(data_df))    
+    print(data_df.head(5))
+
+    # Apply the model to the test set   
     data_df[columns[5]] = data_df.iloc[:, :-1].apply(model.classify, axis=1)
     mismatches = data_df[data_df[columns[4]] != data_df[columns[5]]]
+
+    
+    x_test, y_test = extract_values(data_df.iloc[:, :-1])
+    x_test, y_pred = extract_values(data_df)
 
     print(f'Errors found: {len(mismatches)}')
     if(mismatches.size > 0):
         print(mismatches)
 
     # Create a confusion matrix
-    cm = confusion_matrix(data_df[columns[4]], data_df[columns[5]], labels=model.classes)
+    cm = confusion_matrix(y_test, y_pred, labels=model.classes)
 
     # Convert the confusion matrix to a DataFrame for easier plotting
     cm_df = pd.DataFrame(cm, index=model.classes, columns=model.classes)
@@ -134,11 +143,30 @@ def plot_cm(data2, model):
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.show()
+ 
 
-    f1_macro = f1_score(data_df['Species'], data_df['Predicted Species'], average='macro')
-    f1_micro = f1_score(data_df['Species'], data_df['Predicted Species'], average='micro')
-    f1_weighted = f1_score(data_df['Species'], data_df['Predicted Species'], average='weighted')
+
+    '''
+    'micro': Computes metrics globally by counting true positives, false negatives, and false positives across all classes.
+    'macro': Calculates metrics for each label and finds their unweighted mean.
+    'weighted': Computes the average weighted by the number of samples in each class.
+    'binary': Only applicable for binary classification (ignores the pos_label parameter).
+
+
+    f1_macro = f1_score(y_test, y_pred, average='macro')
+    f1_micro = f1_score(y_test, y_pred, average='micro')
+    f1_weighted = f1_score(y_test, y_pred, average='weighted')
     print(f1_macro, f1_micro, f1_weighted)
+    '''
+
+ 
+   
+    # save metrics
+    model.metrics['fscore'] = f1_score(y_test, y_pred, average='weighted')
+    model.metrics['kappa'] = cohen_kappa_score(y_test, y_pred)
+    model.metrics['matthews'] = matthews_corrcoef(y_test, y_pred)
+    
+ 
 
 
 def print_metrics (data2, model):
@@ -148,24 +176,9 @@ def print_metrics (data2, model):
     data_df.loc[data_df[columns[4]] != model.classes[0], columns[4]] = model.classes[1]
     print(len(data_df))
     
-    # Apply the model to the test set
-    data_df[columns[5]] = data_df.apply(model.classify, axis=1)
-    mismatches = data_df[data_df['Species'] != data_df[columns[5]]]
-
-    print(f'Errors found: {len(mismatches)}')
-    if(mismatches.size > 0):
-        print(mismatches)
-
-    Y_test =  data_df[columns[4]].to_list()
-    Y_pred =  data_df[columns[5]].to_list()
-    # F1-score
-    f1 = f1_score(Y_test, Y_pred)
-    print(f"F1-score: {f1:.4f}")
-
-    # Cohen's Kappa
-    kappa = cohen_kappa_score(Y_test, Y_pred)
-    print(f"Cohen's Kappa: {kappa:.4f}")
-
-    # Matthews correlation coefficient
-    matthews = matthews_corrcoef(Y_test, Y_pred)
-    print(f"Matthews Correlation Coefficient: {matthews:.4f}")
+  
+  
+    print(f"F1-score: {model.metrics['fscore']:.4f}")
+    print(f"Cohen's Kappa: {model.metrics['kappa']:.4f}")
+    print(f"Matthews Correlation Coefficient: {model.metrics['matthews']:.4f}")
+  

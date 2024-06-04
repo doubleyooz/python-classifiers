@@ -3,15 +3,21 @@ from models.Model import ModelInterface
 from utils import _unit_step_func
 
 class Perceptron(ModelInterface):
-  def __init__(self, classes=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width', 'Petal length', 'Petal width'], point_names=['x1', 'x2', 'x3', 'x4']):
+  def __init__(self, df, class_column='Species', columns_ignored=-1):
    
-    self.classes = classes
+    df_copy = df.copy() 
     self.bias = 0
-    self.columns = columns
+    self.columns = list(df_copy.columns[: columns_ignored])
+    self.classes = sorted(list(df_copy[class_column].unique()))
     self.class_mapping = {class_label: idx for idx, class_label in enumerate(self.classes)}
-    self.point_names = point_names
+    self.point_names = ['x' + str(i) for i in range(1, len(self.columns) + 1)]
     self.errors = []
     self.weights = None
+    self.metrics = {
+          'fscore': 0,
+          'kappa': 0,
+          'matthews': 0
+      }
        
   def classify(self, row):
     result = [row[col] for col in self.columns]

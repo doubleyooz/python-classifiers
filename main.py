@@ -168,7 +168,7 @@ def use_minimum_distance_classifier(selected_model, selected_class, selected_dat
     while True:
         title = f'{selected_model} - {selected_class} - {selected_dataset['title']}'
         print(title)
-        actions_list = ['classify', 'predict_point', 'confusion_matrix']
+        actions_list = ['classify', 'predict_point', 'confusion_matrix', 'print_metrics']
         selected_option = show_menu_options("Select action:", menu=actions_list)
         if selected_option == len(actions_list):
             break
@@ -179,14 +179,17 @@ def use_minimum_distance_classifier(selected_model, selected_class, selected_dat
         elif selected_option == 1:
             print(f'{title}: predict')
             use_classifier(selected_dataset['dataset'], c1, given_point=point)
-        else:  
+        elif selected_option == 2:  
             print(f'{title}: confusion_matrix')                       
             plot_cm(selected_dataset['dataset'], c1)
+        else:  
+            print(f'{title}: print_metrics')
+            print_metrics(selected_dataset['dataset'], c1)
 
           
 def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
     
-    p1 = Perceptron(classes=selected_class)
+    p1 = Perceptron(df=selected_dataset['dataset'].copy(), class_column='Species')
     while True:
         title = f'\n{selected_model} - {selected_class} - {selected_dataset['title']} - {p1.weights}'
         print(title)
@@ -216,8 +219,8 @@ def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
         elif selected_option == 3:  
             print(f'{title}: confusion_matrix')                       
             plot_cm(selected_dataset['dataset'], p1)
-        else:  
-            print(f'{title}: predict')
+        else:           
+            print(f'{title}: print_metrics')
             print_metrics(selected_dataset['dataset'], p1)
             
 
@@ -226,7 +229,7 @@ def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
 def use_bayes(selected_model, selected_class, selected_dataset):
     print(len(selected_dataset['dataset']))
   
-    bayes_1 = MaxNaiveBayes(classes=selected_class, df=selected_dataset['dataset'].copy(), Y='Species')
+    bayes_1 = MaxNaiveBayes(df=selected_dataset['dataset'].copy(), class_column='Species')
 
     while True:
         title = f'\n{selected_model} - {selected_class} - {selected_dataset['title']}'
@@ -245,9 +248,9 @@ def use_bayes(selected_model, selected_class, selected_dataset):
             use_classifier(selected_dataset['dataset'], bayes_1, given_point=point, decision_boundary=True)
         elif selected_option == 2:                
             print(f'{title}: confusion_matrix')                       
-            plot_cm(selected_dataset['dataset'], bayes_1)
+            plot_cm(selected_dataset['dataset'], bayes_1)       
         else:  
-            print(f'{title}: predict')
+            print(f'{title}: print_metrics')
             print_metrics(selected_dataset['dataset'], bayes_1)
                   
 

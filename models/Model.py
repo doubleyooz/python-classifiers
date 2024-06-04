@@ -1,11 +1,7 @@
 from abc import ABC, abstractmethod
 
 class ModelInterface(ABC):
-    def __init__(self, class1_avg, class2_avg, classes=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width']):
-        self.class1_avg = class1_avg
-        self.class2_avg = class2_avg
-        self.classes = classes
-        self.columns = columns
+
 
     @abstractmethod
     def decision_function(self, row):

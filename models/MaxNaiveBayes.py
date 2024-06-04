@@ -11,28 +11,29 @@ class MaxNaiveBayes(ModelInterface):
         self.point_names = ['x' + str(i) for i in range(1, len(self.columns) + 1)]
         self.classes = sorted(list(df_copy[class_column].unique()))
         self.means = {cl: {feat_name: None for feat_name in self.columns} for cl in self.classes}
+       
         self.class_mapping = {class_label: idx for idx, class_label in enumerate(self.classes)}
+        
         self.std = {cl: {feat_name: None for feat_name in self.columns} for cl in self.classes}
         # number_of_classes = len(class_labels)
-        
+        self.prior = []
+    
         for label in self.classes:
             df_feature = df_copy[df_copy[class_column] == label] # it extracts all the datapoints where the Y value is the given label
             self.prior.append(len(df_feature)/len(df_copy)) # calculate the prior probability for each class. We're dividing the number of samples where Y = y by the total of samples
             for feat_name in self.columns:             
                 self.means[label][feat_name] = df_feature[feat_name].mean()
                 self.std[label][feat_name] = df_feature[feat_name].std()
-
-
-
-        self.means = {}
-        self.std = {}
-        self.prior = []
        
         self.errors = []
+        self.metrics = {
+            'fscore': 0,
+            'kappa': 0,
+            'matthews': 0
+        }
 
   
     def classify(self, row): 
-
         return self.classes[0] if np.argmax(self.decision_function(row)) < 1 else self.classes[1]
 
 
@@ -82,6 +83,7 @@ class MaxNaiveBayes(ModelInterface):
    
 
     def _calculate_likelihood_gaussian(self, feat_name, feat_val, class_label):     
+      
         mean = self.means[class_label][feat_name]
         std = self.std[class_label][feat_name]
         p_x_given_y = (1 / (np.sqrt(2 * np.pi) * std) * np.exp(-((feat_val-mean)**2) / (2 * std**2))) # normal distribution
@@ -105,3 +107,4 @@ class MaxNaiveBayes(ModelInterface):
             Y_pred.append(np.argmax(post_prob)) # add to the returning array the class where the posterior probability is the highest
 
         return np.array(Y_pred)
+    
