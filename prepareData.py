@@ -62,7 +62,7 @@ def get_averages(data_df = None, features=['Sepal length', 'Sepal width', 'Petal
         averages_array.append(data_df[feature].mean())
     return averages, averages_array
 
-def get_pairs(exclude = 'virginica', column='Species', pairs = ['virginica', 'setosa', 'versicolor'], generate_numbers = False, seed=None, overwrite_classes=False):
+def get_classes(exclude = 'virginica', column='Species', classes = ['virginica', 'setosa', 'versicolor'], generate_numbers = False, seed=None, overwrite_classes=False):
     
     print(f'exclude={exclude}')
     if generate_numbers:
@@ -78,21 +78,21 @@ def get_pairs(exclude = 'virginica', column='Species', pairs = ['virginica', 'se
         data_df = pd.DataFrame(random_values)       
       
 
-        pairs_copy = pairs
-        excluded_index = pairs.index(exclude)
-        pairs_copy.remove(exclude)
+        classes_copy = classes
+        excluded_index = classes.index(exclude)
+        classes_copy.remove(exclude)
         avg_list = [virginica_avg, setosa_avg, versicolor_avg ]
         del avg_list[excluded_index]
 
-        c1 = MinimumDistance4(class1_avg=avg_list[0], class2_avg=avg_list[1], pairs=pairs_copy)
+        c1 = MinimumDistance4(class1_avg=avg_list[0], class2_avg=avg_list[1], classes=classes_copy)
         data_df[column] = data_df.apply(c1.classify, axis=1)
     else: 
-        print(exclude, pairs)
+        print(exclude, classes)
         data_df = df[df[column] != exclude]
         opposite_data_df = df[df[column] == exclude]
 
-        class1_df = df[df[column] == pairs[0]]
-        class2_df = df[df[column] != pairs[0]]
+        class1_df = df[df[column] == classes[0]]
+        class2_df = df[df[column] != classes[0]]
           
             
 
@@ -108,11 +108,11 @@ def get_pairs(exclude = 'virginica', column='Species', pairs = ['virginica', 'se
 
    
     if overwrite_classes:        
-        data.loc[data[column] != pairs[0], column] = pairs[1]
-        test.loc[test[column] != pairs[0], column] = pairs[1]
-        class1_df.loc[class1_df[column] != pairs[0], column] = pairs[1]
-        class2_df.loc[class2_df[column] != pairs[0], column] = pairs[1]
-        opposite_data_df.loc[opposite_data_df[column] != pairs[0], column] = pairs[1]
+        data.loc[data[column] != classes[0], column] = classes[1]
+        test.loc[test[column] != classes[0], column] = classes[1]
+        class1_df.loc[class1_df[column] != classes[0], column] = classes[1]
+        class2_df.loc[class2_df[column] != classes[0], column] = classes[1]
+        opposite_data_df.loc[opposite_data_df[column] != classes[0], column] = classes[1]
     
         if data[column].nunique(0) == 1:
         

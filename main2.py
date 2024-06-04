@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         self.model_names = [list(d.keys())[0] for d in self.models]
 
         self.point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
-        self.pairs = ['virginica', 'versicolor']
+        self.classes = ['virginica', 'versicolor']
 
 
 

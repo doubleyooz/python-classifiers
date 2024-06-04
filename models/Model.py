@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
 class ModelInterface(ABC):
-    def __init__(self, class1_avg, class2_avg, pairs=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width']):
+    def __init__(self, class1_avg, class2_avg, classes=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width']):
         self.class1_avg = class1_avg
         self.class2_avg = class2_avg
-        self.pairs = pairs
+        self.classes = classes
         self.columns = columns
 
     @abstractmethod

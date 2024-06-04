@@ -3,40 +3,37 @@ from models.Model import ModelInterface
 from utils import _unit_step_func
 
 class MaxNaiveBayes(ModelInterface):
-    def __init__(self, pairs=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width', 'Petal length', 'Petal width'], point_names=['x1', 'x2', 'x3', 'x4']):
-        
-        self.pairs = pairs
+    def __init__(self,  df, class_column='Species', columns_ignored=-1):
        
-        self.means = {}
-        self.std = {}
-        self.prior = []
-       
-        self.columns = columns
-        self.point_names = point_names
-        self.errors = []
-
-    def initialise (self, df, Y, columns_ignored = -1):
         # the final column must refer to the classes
         df_copy = df.copy()        
         self.columns = list(df_copy.columns[: columns_ignored])
         self.point_names = ['x' + str(i) for i in range(1, len(self.columns) + 1)]
-        self.pairs = sorted(list(df_copy[Y].unique()))
-        self.means = {cl: {feat_name: None for feat_name in self.columns} for cl in self.pairs}
-        self.std = {cl: {feat_name: None for feat_name in self.columns} for cl in self.pairs}
+        self.classes = sorted(list(df_copy[class_column].unique()))
+        self.means = {cl: {feat_name: None for feat_name in self.columns} for cl in self.classes}
+        self.class_mapping = {class_label: idx for idx, class_label in enumerate(self.classes)}
+        self.std = {cl: {feat_name: None for feat_name in self.columns} for cl in self.classes}
         # number_of_classes = len(class_labels)
         
-        for label in self.pairs:
-            df_feature = df_copy[df_copy[Y] == label] # it extracts all the datapoints where the Y value is the given label
+        for label in self.classes:
+            df_feature = df_copy[df_copy[class_column] == label] # it extracts all the datapoints where the Y value is the given label
             self.prior.append(len(df_feature)/len(df_copy)) # calculate the prior probability for each class. We're dividing the number of samples where Y = y by the total of samples
-            for feat_name in self.columns:
-             
+            for feat_name in self.columns:             
                 self.means[label][feat_name] = df_feature[feat_name].mean()
                 self.std[label][feat_name] = df_feature[feat_name].std()
 
 
+
+        self.means = {}
+        self.std = {}
+        self.prior = []
+       
+        self.errors = []
+
+  
     def classify(self, row): 
 
-        return self.pairs[0] if np.argmax(self.decision_function(row)) < 1 else self.pairs[1]
+        return self.classes[0] if np.argmax(self.decision_function(row)) < 1 else self.classes[1]
 
 
     def get_equation(self):
@@ -61,7 +58,7 @@ class MaxNaiveBayes(ModelInterface):
     def decision_function(self, x):
        
         # calculate likelihood    
-        number_of_classes = len(self.pairs)   
+        number_of_classes = len(self.classes)   
    
         likelihood = [1]* number_of_classes
 
@@ -69,10 +66,10 @@ class MaxNaiveBayes(ModelInterface):
 
             for i in self.columns:   # loop over every feature
                 # multiply individual conditional probabilities to get the likelihood
-                # print(i, x[i], self.pairs[j])
+                # print(i, x[i], self.classes[j])
                     
                                                                     # feature_name,   val, 'class'   
-                likelihood[j] *= self._calculate_likelihood_gaussian(i, x[i], self.pairs[j])
+                likelihood[j] *= self._calculate_likelihood_gaussian(i, x[i], self.classes[j])
 
         # calculate posterior probability (numerator only)
         post_prob = [1]*number_of_classes

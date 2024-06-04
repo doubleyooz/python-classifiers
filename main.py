@@ -5,82 +5,82 @@ import pandas as pd
 
 import seaborn as sns
 
-from models.BackPropagation import NeuralNetwork
+from models.BackPropagation import BackPropagation
 from models.MinimumDistance4 import MinimumDistance4
 from models.MinimumDistance2 import MinimumDistance2
 from models.Perceptron import Perceptron
 from models.MaxNaiveBayes import MaxNaiveBayes
-from prepareData import get_pairs, get_averages
-from test import use_classifier, plot_cm, print_metrics
+from prepareData import get_classes, get_averages
+from test import use_classifier, plot_cm, print_metrics, extract_values, map_values
 
 point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
 
 '''
-data, test = get_pairs(exclude='virginica')
-pairs = ['setosa', 'versicolor']
+data, test = get_classes(exclude='virginica')
+classes = ['setosa', 'versicolor']
 c1 = MinimumDistance(class1_avg=setosa_avg, class2_avg=versicolor_avg)
 use_classifier(data, c1,  given_point=point)
 use_classifier(test, c1,  given_point=point)
-plot_cm(test, c1, pairs=pairs)
+plot_cm(test, c1, classes=classes)
 '''
 '''
-data, test = get_pairs(exclude='versicolor')
-pairs = ['virginica', 'setosa']
-c1 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, pairs=pairs)
+data, test = get_classes(exclude='versicolor')
+classes = ['virginica', 'setosa']
+c1 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, classes=classes)
 use_classifier(data, c1,  given_point=point)
 use_classifier(test, c1,  given_point=point)
-plot_cm(test, c1, pairs=pairs)
+plot_cm(test, c1, classes=classes)
 
 '''
 
 '''
-data, test = get_pairs(exclude='setosa')
-pairs = ['virginica', 'versicolor']
-# c1 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, pairs=pairs)
-# c2 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, pairs=pairs)
-p1 = Perceptron(learning_rate=0.01, max_iters=1200, pairs=pairs)
+data, test = get_classes(exclude='setosa')
+classes = ['virginica', 'versicolor']
+# c1 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, classes=classes)
+# c2 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, classes=classes)
+p1 = Perceptron(learning_rate=0.01, max_iters=1200, classes=classes)
 
 p1.fit(test)
 print(p1.weights)
 use_classifier(test, p1,  given_point=point, old_entries=True)
-plot_cm(test, p1, pairs=pairs)
+plot_cm(test, p1, classes=classes)
 
     '''
 def main():
     menu = ["MinimumDistance4", "MinimumDistance2", "Perceptron", "MaxBayes", "BackPropagation"]
-    dict_pairs = {
+    dict_classes = {
         'versicolor - setosa': {
             'exclude': 'virginica',
-            'pairs': ['versicolor', 'setosa']
+            'classes': ['versicolor', 'setosa']
         },
         'versicolor - virginica': {
             'exclude': 'setosa',
-            'pairs': ['virginica', 'versicolor']
+            'classes': ['virginica', 'versicolor']
         },
 
         'virginica - setosa': {
             'exclude': 'versicolor',
-            'pairs': ['virginica', 'setosa']
+            'classes': ['virginica', 'setosa']
         },
         
      
         'versicolor - non_versicolor': {
             'exclude': 'versicolor',
-            'pairs': ['versicolor', 'non_versicolor']
+            'classes': ['versicolor', 'non_versicolor']
         },
        
 
         'setosa - non_setosa': {
             'exclude': 'setosa',
-            'pairs': ['setosa', 'non_setosa']
+            'classes': ['setosa', 'non_setosa']
         },
         'virginica - non_virginica': {
             'exclude': 'virginica',
-            'pairs': ['virginica', 'non_virginica' ]
+            'classes': ['virginica', 'non_virginica' ]
         },
     }
-    pairs_list = list(dict_pairs.keys())
-    print(pairs_list)
+    classes_list = list(dict_classes.keys())
+    print(classes_list)
     
     point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
     while True:              
@@ -94,12 +94,12 @@ def main():
         while True:
             # Use MinimumDistance4 model
             print(selected_model)
-            selected_option = show_menu_options("Select the pairs to be considered", menu=pairs_list)
-            if selected_option == len(pairs_list):
+            selected_option = show_menu_options("Select the classes to be considered", menu=classes_list)
+            if selected_option == len(classes_list):
                 break
-            selected_pair = dict_pairs[pairs_list[selected_option]]
+            selected_class = dict_classes[classes_list[selected_option]]
         
-            data, test, class1_df, class2_df, opposite_data_df = get_pairs(exclude=selected_pair['exclude'], pairs=selected_pair['pairs'], overwrite_classes=True)
+            data, test, class1_df, class2_df, opposite_data_df = get_classes(exclude=selected_class['exclude'], classes=selected_class['classes'], overwrite_classes=True)
      
             class1_avg_dict , class1_avg_list = get_averages(class1_df)
             class2_avg_dict , class2_avg_list = get_averages(class2_df)
@@ -107,7 +107,7 @@ def main():
             print(class2_avg_list)
 
             while True: 
-                title = f'{selected_model} - {selected_pair['pairs']}'
+                title = f'{selected_model} - {selected_class['classes']}'
                 print(title)
                 datasets_list = ['training', 'test', 'full']
                 selected_option = show_menu_options("Select dataset to be used", menu=datasets_list)
@@ -123,16 +123,16 @@ def main():
                 
 
                 if selected_model == "Perceptron":
-                    use_perceptron(selected_model=selected_model, selected_pair=selected_pair['pairs'], selected_dataset=selected_dataset, exclude=selected_pair['exclude'])
+                    use_perceptron(selected_model=selected_model, selected_class=selected_class['classes'], selected_dataset=selected_dataset, exclude=selected_class['exclude'])
 
                 elif any(selected_model in x for x in ["MinimumDistance4", "MinimumDistance2"]):
-                    use_minimum_distance_classifier(selected_model=selected_model, selected_dataset=selected_dataset, selected_pair=selected_pair['pairs'], class1_avg_list=class1_avg_list, class2_avg_list=class2_avg_list)
+                    use_minimum_distance_classifier(selected_model=selected_model, selected_dataset=selected_dataset, selected_class=selected_class['classes'], class1_avg_list=class1_avg_list, class2_avg_list=class2_avg_list)
               
                 elif selected_model == "MaxBayes":
-                    use_bayes(selected_model=selected_model, selected_dataset=selected_dataset, selected_pair=selected_pair['pairs'])
+                    use_bayes(selected_model=selected_model, selected_dataset=selected_dataset, selected_class=selected_class['classes'])
                 
                 elif selected_model == 'BackPropagation':
-                    use_backpropagation(selected_model=selected_model, selected_dataset=selected_dataset, selected_pair=selected_pair['pairs'])
+                    use_backpropagation(selected_model=selected_model, selected_dataset=selected_dataset, selected_class=selected_class['classes'], exclude=selected_class['exclude'])
                 
 
 def show_menu_options(title, menu, last_option="Go back"):
@@ -156,17 +156,17 @@ def show_menu_options(title, menu, last_option="Go back"):
             exit(0)
 
           
-def use_minimum_distance_classifier(selected_model, selected_pair, selected_dataset, class1_avg_list, class2_avg_list):
+def use_minimum_distance_classifier(selected_model, selected_class, selected_dataset, class1_avg_list, class2_avg_list):
     print(len(selected_dataset['dataset']))
   
     if selected_model == 'MinimumDistance4':
-        c1 = MinimumDistance4(class1_avg=class1_avg_list, class2_avg=class2_avg_list, pairs=selected_pair)
+        c1 = MinimumDistance4(class1_avg=class1_avg_list, class2_avg=class2_avg_list, classes=selected_class)
     else:
-        c1 = MinimumDistance2(class1_avg=class1_avg_list[:2], class2_avg=class2_avg_list[:2], pairs=selected_pair)
+        c1 = MinimumDistance2(class1_avg=class1_avg_list[:2], class2_avg=class2_avg_list[:2], classes=selected_class)
 
     print(f'class_1: {c1.class1_avg}; class_2: {c1.class2_avg}')
     while True:
-        title = f'{selected_model} - {selected_pair} - {selected_dataset['title']}'
+        title = f'{selected_model} - {selected_class} - {selected_dataset['title']}'
         print(title)
         actions_list = ['classify', 'predict_point', 'confusion_matrix']
         selected_option = show_menu_options("Select action:", menu=actions_list)
@@ -184,12 +184,11 @@ def use_minimum_distance_classifier(selected_model, selected_pair, selected_data
             plot_cm(selected_dataset['dataset'], c1)
 
           
-def use_perceptron(selected_model, selected_pair, selected_dataset, exclude):
+def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
     
-    p1 = Perceptron(learning_rate=0.01, max_iters=1200, pairs=selected_pair)
-
+    p1 = Perceptron(classes=selected_class)
     while True:
-        title = f'\n{selected_model} - {selected_pair} - {selected_dataset['title']} - {p1.weights}'
+        title = f'\n{selected_model} - {selected_class} - {selected_dataset['title']} - {p1.weights}'
         print(title)
         actions_list = ['classify', 'fit', 'predict_point', 'confusion_matrix', 'print_metrics']
         selected_option = show_menu_options("Select action:", menu=actions_list)
@@ -201,15 +200,16 @@ def use_perceptron(selected_model, selected_pair, selected_dataset, exclude):
             use_classifier(selected_dataset['dataset'], p1)
         elif selected_option == 1:
             print(f'{title}: fit')
-            data, test, class1_df, class2_df, opposite_data_df = get_pairs(exclude=exclude, pairs=selected_pair, overwrite_classes=True)
+            data, test, class1_df, class2_df, opposite_data_df = get_classes(exclude=exclude, classes=selected_class, overwrite_classes=True)
             if selected_dataset['title'] == 'training':
                 dataset = data
             elif selected_dataset['title'] == 'test':
                 dataset = test
             else: 
                 dataset = pd.concat([data, test])
-                
-            p1.fit(dataset)
+            x_test, y_test = extract_values(dataset)
+            y_test = map_values(values=y_test, class_mapping=p1.class_mapping)
+            p1.fit(inputs=x_test, targets=y_test, epochs=1000, learning_rate=0.01)
         elif selected_option == 2:
             print(f'{title}: predict')
             use_classifier(selected_dataset['dataset'], p1, given_point=point)
@@ -223,15 +223,14 @@ def use_perceptron(selected_model, selected_pair, selected_dataset, exclude):
 
 
 
-def use_bayes(selected_model, selected_pair, selected_dataset):
+def use_bayes(selected_model, selected_class, selected_dataset):
     print(len(selected_dataset['dataset']))
   
-    bayes_1 = MaxNaiveBayes(pairs=selected_pair)
+    bayes_1 = MaxNaiveBayes(classes=selected_class, df=selected_dataset['dataset'].copy(), Y='Species')
 
     while True:
-        title = f'\n{selected_model} - {selected_pair} - {selected_dataset['title']}'
+        title = f'\n{selected_model} - {selected_class} - {selected_dataset['title']}'
         print(title)
-        bayes_1.initialise(df=selected_dataset['dataset'].copy(), Y='Species')
         actions_list = ['classify', 'predict_point', 'confusion_matrix', 'print_metrics']
         selected_option = show_menu_options("Select action:", menu=actions_list)
         if selected_option == len(actions_list):
@@ -253,59 +252,72 @@ def use_bayes(selected_model, selected_pair, selected_dataset):
                   
 
 
-def use_backpropagation(selected_model, selected_pair, selected_dataset):
+def use_backpropagation(selected_model, selected_class, selected_dataset, exclude):
     print(len(selected_dataset['dataset']))
   
-    back_prop1 = NeuralNetwork(df=selected_dataset['dataset'].copy(), class_column='Species')
+    back_prop1 = BackPropagation(df=selected_dataset['dataset'].copy(), class_column='Species')
 
     while True:
-        title = f'\n{selected_model} - {selected_pair} - {selected_dataset['title']}'
+        title = f'\n{selected_model} - {selected_class} - {selected_dataset['title']}'
         print(title)
         # back_prop1.initialise(df=selected_dataset['dataset'].copy(), Y='Species')
-        actions_list = ['classify', 'predict_point', 'confusion_matrix', 'print_metrics']
+        actions_list = ['train', 'classify', 'predict_point', 'confusion_matrix', 'print_metrics']
         selected_option = show_menu_options("Select action:", menu=actions_list)
+
+      
+                       
+            
         if selected_option == len(actions_list):
             break
         
         if selected_option == 0:
-            print(f'{title}: classify')
+            print(f'{title}: train')
             # use_classifier(selected_dataset['dataset'], back_prop1, decision_boundary=True)
+          
+            data, test, class1_df, class2_df, opposite_data_df = get_classes(exclude=exclude, classes=selected_class, overwrite_classes=True)
+            if selected_dataset['title'] == 'training':
+                dataset = data
+            elif selected_dataset['title'] == 'test':
+                dataset = test
+            else: 
+                dataset = pd.concat([data, test])
+           
             
+            x_test, y_test = extract_values(dataset)
+            y_test = map_values(values=y_test, class_mapping=back_prop1.class_mapping)
+            back_prop1.fit(x_test, y_test, epochs=5000, learning_rate=0.01)
+        
+        elif selected_option == 1: 
+            print(f'{title}: classify')    
+                
+            '''
+            outputs = back_prop1.decision_function(X_test)
+            for j, (x, y, output) in enumerate(zip(X_test, Y_test, outputs)):
+                print("{} - Input: {} - Target: {} - Prediction: {}".format(j, x, y, output))   
+            '''
             
-            modified_df = selected_dataset['dataset'].copy()
-            X_test = modified_df.iloc[:, :-1].values  # Features (all columns except the last one)
-            Y_test = modified_df.iloc[:, -1].values   # Labels (last column)
-            for i in range(1000): #trains the NN 1000 times
-                if (i % 100 == 0):
-                    print(f'y_test: {Y_test}, feedForward: {back_prop1.feedForward(X_test)}')
-                  
-                    print("Loss: " + str(np.mean(np.square(Y_test - back_prop1.feedForward(X_test)))))
-                back_prop1.train(X_test, Y_test)
-                    
-            print("Input: " + str(X_test))
-            print("Actual Output: " + str(Y_test))
-            print("Loss: " + str(np.mean(np.square(Y_test - back_prop1.feedForward(X_test)))))
-            print("\n")
-            print("Predicted Output: " + str(back_prop1.feedForward(X_test)))
-        '''
-        elif selected_option == 1:                
+            use_classifier(selected_dataset['dataset'], back_prop1, given_point=point, decision_boundary=True)
+            
+               
+        elif selected_option == 2:                
             print(f'{title}: predict')
             use_classifier(selected_dataset['dataset'], back_prop1, given_point=point, decision_boundary=True)
-        elif selected_option == 2:                
+       
+        elif selected_option == 3:                
             print(f'{title}: confusion_matrix')                       
             plot_cm(selected_dataset['dataset'], back_prop1)
         else:  
-            print(f'{title}: predict')
+            print(f'{title}: print_metrics')
             print_metrics(selected_dataset['dataset'], back_prop1)
-        '''
+       
   
 
-def select_pairs(pairs_list, dict_pairs):
-    selected_option = show_menu_options("Select the pairs to be considered", menu=pairs_list)
+def select_classes(classes_list, dict_classes):
+    selected_option = show_menu_options("Select the classes to be considered", menu=classes_list)
    
-    selected_pair = dict_pairs[pairs_list[selected_option]]
+    selected_class = dict_classes[classes_list[selected_option]]
     
-    data, test, class1_df, class2_df, opposite_data_df = get_pairs(exclude=selected_pair['exclude'], pairs=selected_pair['pairs'], overwrite_classes=True)
+    data, test, class1_df, class2_df, opposite_data_df = get_classes(exclude=selected_class['exclude'], classes=selected_class['classes'], overwrite_classes=True)
     
     class1_avg_dict , class1_avg_list = get_averages(class1_df)
     class2_avg_dict , class2_avg_list = get_averages(class2_df)

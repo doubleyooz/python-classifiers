@@ -3,12 +3,12 @@ from models.Model import ModelInterface
 from utils import _unit_step_func
 
 class Perceptron(ModelInterface):
-  def __init__(self, learning_rate=0.01, max_iters=1000, pairs=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width', 'Petal length', 'Petal width'], point_names=['x1', 'x2', 'x3', 'x4']):
-    self.lr = learning_rate
-    self.max_iters = max_iters
-    self.pairs = pairs
+  def __init__(self, classes=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width', 'Petal length', 'Petal width'], point_names=['x1', 'x2', 'x3', 'x4']):
+   
+    self.classes = classes
     self.bias = 0
     self.columns = columns
+    self.class_mapping = {class_label: idx for idx, class_label in enumerate(self.classes)}
     self.point_names = point_names
     self.errors = []
     self.weights = None
@@ -16,16 +16,11 @@ class Perceptron(ModelInterface):
   def classify(self, row):
     result = [row[col] for col in self.columns]
 
-    return self.pairs[0] if self.decision_function(result) > 0 else self.pairs[1]
+    return self.classes[0] if self.decision_function(result) > 0 else self.classes[1]
 
-  def fit(self, dataframe):
+  def fit(self, inputs, targets, learning_rate=0.01, epochs=1000):
   
-    data = dataframe.copy()
-    x = data.iloc[0:100, [0, 1, 2, 3]].values
-    y = data.iloc[0:100, 4].values
-    y_ = np.where(y == self.pairs[0], 1, 0)
-    
-    n_samples, n_features = x.shape
+    n_samples, n_features = inputs.shape
     
     # init parameters
     self.weights = np.zeros(n_features)
@@ -33,10 +28,10 @@ class Perceptron(ModelInterface):
     current_interaction = 0
     change = True      
                        
-    while change and current_interaction < self.max_iters:
+    while change and current_interaction < epochs:
       error = 0
       change = False
-      for index, x_i in enumerate(x):
+      for index, x_i in enumerate(inputs):
         # Ensure x_i is a numpy array
         if type(x_i) is not np.ndarray:
           x_i = np.array(x_i)
@@ -46,13 +41,14 @@ class Perceptron(ModelInterface):
                 #             0            0 =  0
                 #             1            0 =  1
                 #             0            1 = -1
-        update = self.lr * (y_[index] - y_predicted) 
-       
+        update = learning_rate * (targets[index] - y_predicted) 
+
+              
         self.weights += update * x_i
         self.bias += update
         change = True
         current_interaction += 1
-        if current_interaction >= self.max_iters:
+        if current_interaction >= epochs:
             break
        
         error += int(update != 0)

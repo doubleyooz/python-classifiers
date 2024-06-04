@@ -9,35 +9,37 @@ from models.MaxNaiveBayes import MaxNaiveBayes
 from utils import get_grid_values
 columns = ['Sepal length', 'Sepal width', 'Petal length', 'Petal width', 'Species', 'Predicted Species']
 
-def use_classifier (data2, classifier: ModelInterface, given_point=None, old_entries=False, decision_boundary=True):
+def extract_values(dataframe):
+    X_test = dataframe.iloc[:, :-1].values  # Features (all columns except the last one)
+    Y_test = dataframe.iloc[:, -1].values   # Labels (last column)
+
+    return X_test, Y_test
+   
+def map_values(values, class_mapping):
+    return [class_mapping[class_name] for class_name in values]
+
+def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=False, decision_boundary=True):
    
     modified_df = data2.copy()
 
-    print(f'DATA SIZE: {len(modified_df)}')
+    print(f'DATA SIZE: {len(modified_df)}', model.columns)
     print(modified_df.head(10))
     print(modified_df.tail(10))
-    print(classifier.columns)
 
     # Create a dictionary to map class names to numerical values
-    class_mapping = {classifier.pairs[0]: 0, classifier.pairs[1]: 1}
-   
-    # Calculate the distance for each point on the grid   
-    X_test = modified_df.iloc[:, :-1].values  # Features (all columns except the last one)
-    Y_test = modified_df.iloc[:, -1].values   # Labels (last column)
-   
-    # Calculate the distance for each point on the grid
-    fit = getattr(classifier, "fit", None)
-    if callable(fit): 
-        classifier.fit(modified_df)
-
-    # modified_df[columns[5]] = classifier._naive_bayes_gaussian(X=X_test)
-    modified_df[columns[5]] = modified_df.apply(classifier.classify, axis=1)
-    modified_df[columns[5]] = modified_df[columns[5]].map(class_mapping)
-   
   
-    # Apply the mapping to Y_test
-    Y_test = [class_mapping[class_name] for class_name in Y_test]
-    
+    X_test, Y_test = extract_values(modified_df)
+
+    Y_test = map_values(Y_test, model.class_mapping)
+    # Calculate the distance for each point on the grid
+    fit = getattr(model, "fit", None)
+    if callable(fit): 
+        model.fit(inputs=X_test, targets=Y_test, learning_rate=0.01, epochs=1000)
+
+    # modified_df[columns[5]] = model._naive_bayes_gaussian(X=X_test)
+    modified_df[columns[5]] = modified_df.iloc[:, :-1].apply(model.classify, axis=1)
+    modified_df[columns[5]] = modified_df[columns[5]].map(model.class_mapping)
+   
     print(modified_df.head(10))
    
     print(confusion_matrix(Y_test, modified_df[columns[5]]))
@@ -50,27 +52,26 @@ def use_classifier (data2, classifier: ModelInterface, given_point=None, old_ent
     class2_df = modified_df[modified_df[columns[entries_index]] == 1]
 
    
-   
     # Calculate the decision function value for each point on the grid   
-    decision_equation = classifier.get_equation()
+    decision_equation = model.get_equation()
 
     # Plot the decision boundary
     plt.figure(figsize=(8, 6))
     plt.scatter(class1_df[columns[0]], class1_df[columns[1]], c='blue')
     plt.scatter(class2_df[columns[0]], class2_df[columns[1]], c='green')
 
-    values_grid = get_grid_values(modified_df, columns=classifier.columns)
+    values_grid = get_grid_values(modified_df, columns=model.columns)
     
-    legend = [classifier.pairs[0], classifier.pairs[1], 'Decision Boundary']
+    legend = [model.classes[0], model.classes[1], 'Decision Boundary']
 
     if given_point:
-        predicted_species = classifier.predict(given_point)
+        predicted_species = model.predict(given_point)
         plt.scatter(given_point['x1'], given_point['x2'], c='red')  # Plot the given point
         legend.insert( 2, f'Given Point {predicted_species}')
 
   
     if decision_boundary:       
-        decision_function_values = classifier.get_decision_values(values_grid)
+        decision_function_values = model.get_decision_values(values_grid)
         plt.contour(values_grid['x1'], values_grid['x2'], decision_function_values, levels=[0], colors='purple')
 
     # Customize the plot
@@ -81,13 +82,13 @@ def use_classifier (data2, classifier: ModelInterface, given_point=None, old_ent
     plt.title(decision_equation, fontsize=10)
     plt.legend(legend)
 
-    if len(classifier.columns) >= 3:
+    if len(model.columns) >= 3:
     # Start a new plot for Petal Length vs. Petal Width
         plt.figure(figsize=(8, 6))
         plt.scatter(class1_df[columns[2]], class1_df[columns[3]], c='blue')
         plt.scatter(class2_df[columns[2]], class2_df[columns[3]], c='green')
         if given_point:
-            predicted_species = classifier.predict(given_point)
+            predicted_species = model.predict(given_point)
             plt.scatter(given_point['x3'], given_point['x4'], c='red')  # Plot the given point
             legend.insert( 2, f'Given Point {predicted_species}')
 
@@ -105,26 +106,26 @@ def use_classifier (data2, classifier: ModelInterface, given_point=None, old_ent
 
 
 
-def plot_cm(data2, classifier):
+def plot_cm(data2, model):
     data_df = data2.copy()
 
     #guarantees we have only two values
-    data_df.loc[data_df[columns[4]] != classifier.pairs[0], columns[4]] = classifier.pairs[1]
+    data_df.loc[data_df[columns[4]] != model.classes[0], columns[4]] = model.classes[1]
     print(len(data_df))
     
-    # Apply the classifier to the test set
-    data_df['Predicted Species'] = data_df.apply(classifier.classify, axis=1)
-    mismatches = data_df[data_df['Species'] != data_df['Predicted Species']]
+    # Apply the model to the test set
+    data_df[columns[5]] = data_df.iloc[:, :-1].apply(model.classify, axis=1)
+    mismatches = data_df[data_df[columns[4]] != data_df[columns[5]]]
 
     print(f'Errors found: {len(mismatches)}')
     if(mismatches.size > 0):
         print(mismatches)
 
     # Create a confusion matrix
-    cm = confusion_matrix(data_df['Species'], data_df['Predicted Species'], labels=classifier.pairs)
+    cm = confusion_matrix(data_df[columns[4]], data_df[columns[5]], labels=model.classes)
 
     # Convert the confusion matrix to a DataFrame for easier plotting
-    cm_df = pd.DataFrame(cm, index=classifier.pairs, columns=classifier.pairs)
+    cm_df = pd.DataFrame(cm, index=model.classes, columns=model.classes)
 
     # Plot the confusion matrix
     plt.figure(figsize=(8, 6))
@@ -140,15 +141,15 @@ def plot_cm(data2, classifier):
     print(f1_macro, f1_micro, f1_weighted)
 
 
-def print_metrics (data2, classifier):
+def print_metrics (data2, model):
     data_df = data2.copy()
 
     #guarantees we have only two values
-    data_df.loc[data_df[columns[4]] != classifier.pairs[0], columns[4]] = classifier.pairs[1]
+    data_df.loc[data_df[columns[4]] != model.classes[0], columns[4]] = model.classes[1]
     print(len(data_df))
     
-    # Apply the classifier to the test set
-    data_df[columns[5]] = data_df.apply(classifier.classify, axis=1)
+    # Apply the model to the test set
+    data_df[columns[5]] = data_df.apply(model.classify, axis=1)
     mismatches = data_df[data_df['Species'] != data_df[columns[5]]]
 
     print(f'Errors found: {len(mismatches)}')

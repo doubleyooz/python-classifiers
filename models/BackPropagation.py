@@ -1,20 +1,16 @@
 import numpy as np
 import pandas as pd
-import numpy as np
-import random
 
-path = './assets/Iris.csv'
-df = pd.read_csv(path)
+from models.Model import ModelInterface
 
-class BackPropagation(object):
+class BackPropagation(ModelInterface):
     def __init__(self, df, class_column='Species', hidden_layers=[3, 3], columns_ignored=-1):
         df_copy = df.copy()        
         self.columns = list(df_copy.columns[: columns_ignored])
         self.point_names = ['x' + str(i) for i in range(1, len(self.columns) + 1)]
         self.classes = sorted(list(df_copy[class_column].unique()))
-    
-        #parameters
-      
+        self.class_mapping = {class_label: idx for idx, class_label in enumerate(self.classes)}
+        #parameters      
         self.input_layer = len(self.columns)
         self.output_layer = len(self.classes)
         self.hidden_layers = hidden_layers
@@ -42,8 +38,8 @@ class BackPropagation(object):
             activations.append(a)
         self.activations = activations
       
-        
-    def forward_propagate(self, inputs):
+    # forward_propagate
+    def decision_function(self, inputs):
         """Computes forward propagation of the network based on input signals.
 
         Args:
@@ -66,7 +62,7 @@ class BackPropagation(object):
             # apply sigmoid activation function
             activations = self._sigmoid(net_inputs)
 
-            # save the activations for backpropogation
+            # save the activations for backpropagation
             self.activations[i + 1] = activations
 
         # return output layer activation
@@ -93,7 +89,18 @@ class BackPropagation(object):
     def _sigmoid(self, x):       
         return 1.0/(1.0 + np.exp(-x))
     
-
+    def classify(self, row):
+        # print(self.classes[0] if self.decision_function(row) > 0 else self.classes[1])
+       
+        if isinstance(row, pd.Series):
+            row = row.tolist()
+        elif isinstance(row, dict):
+          
+            row = list(row.values())
+        
+        return list(self.class_mapping.keys())[list(self.class_mapping.values()).index(round(self.decision_function(row)[0]))]
+      
+    
     def gradient_descent(self, learning_rate):
         for i in range(len(self.weights)):
             weights = self.weights[i]
@@ -102,13 +109,17 @@ class BackPropagation(object):
 
             weights += derivatives * learning_rate
 
-    def train(self, inputs, targets, epochs, learning_rate, verbose=False):
+    # train
+    def fit(self, inputs, targets, epochs, learning_rate, verbose=False):
+        print(f'Learning rate: {learning_rate}, epochs: {epochs}')
         for i in range(epochs):
             sum_error = 0
+            if i % 10 == 0:
+                print(f'{i}/{epochs}')
             for j, (input, target) in enumerate(zip(inputs, targets)):
                 
                 # forward propagation
-                output = self.forward_propagate(input)
+                output = self.decision_function(input)
              
                 # calculate error
                 error = target - output 
@@ -124,87 +135,24 @@ class BackPropagation(object):
                 print(f'Weights: {self.weights}')
                 print(f'Error: {sum_error / len(inputs)} at epoch {i}')
             elif i == epochs - 1:
+                print(f'Weights: {self.weights}')
                 print(f'Error: {sum_error / len(inputs)} at epoch {i}')
 
     def _mse(self, target, output):
         return np.average((target - output)**2)
-
-
-def get_pairs(exclude = 'virginica', column='Species', pairs = ['virginica', 'setosa', 'versicolor'], generate_numbers = False, seed=None, overwrite_classes=False):
     
-    print(f'exclude={exclude}')
+    def get_equation(self):
+       
+        str = 'yet to add the equation'
 
-    print(exclude, pairs)
-    data_df = df[df[column] != exclude]
-    opposite_data_df = df[df[column] == exclude]
-
-    class1_df = df[df[column] == pairs[0]]
-    class2_df = df[df[column] != pairs[0]]
-        
-            
-
-    if seed is None:
-        seed = random.randint(1, 1000)
+        return f"Decision Boundary Equation: {str}"
     
-    
-    # Randomly sample 70% of your dataframe
-    data = data_df.copy().sample(frac=0.7, random_state=seed)
-
-    # Get the remaining 30% of the data
-    test = data_df.copy().drop(data.index)
-
-   
-    if overwrite_classes:        
-        data.loc[data[column] != pairs[0], column] = pairs[1]
-        test.loc[test[column] != pairs[0], column] = pairs[1]
-        class1_df.loc[class1_df[column] != pairs[0], column] = pairs[1]
-        class2_df.loc[class2_df[column] != pairs[0], column] = pairs[1]
-        opposite_data_df.loc[opposite_data_df[column] != pairs[0], column] = pairs[1]
-    
-        if data[column].nunique(0) == 1:
-        
-            if len(opposite_data_df) >= len(data):
-                opposite_data_df_sliced = opposite_data_df.head(len(data))
-                data = pd.concat([opposite_data_df_sliced, data])
-                opposite_data_df_sliced = opposite_data_df.head(len(test))
-                test = pd.concat([opposite_data_df_sliced, test])
-            else: 
-                data_sliced = data.head(len(opposite_data_df))
-                data = pd.concat([data_sliced, opposite_data_df])
-                test_sliced = test.head(len(opposite_data_df))
-                test = pd.concat([test_sliced, opposite_data_df])
-                
-  
-
-    print(f'Training data size: {len(data)}')
-    print(f'Testing data size: {len(test)}')
+    def predict(self, point):
+        return self.classify(point)
 
 
-    print(f'non_{exclude}_df size: {len(data_df)}')
-    return data, test, class1_df, class2_df, opposite_data_df
-
-
-
-
-if __name__ == "__main__":
-
-    data, test, class1_df, class2_df, opposite_data_df = get_pairs(exclude='virginica')
-    mlp = BackPropagation(df=data)
-    print(f'input_layer = {mlp.input_layer}, hidden_layers = {mlp.hidden_layers}, output_layer = {mlp.output_layer}')
-    print(f'weights {len(mlp.weights)} = {mlp.weights}')
-    class_mapping = {mlp.classes[0]: 0, mlp.classes[1]: 1}
-   
-    Y_train = data.iloc[:, -1].values 
-    Y_train = [class_mapping[class_name] for class_name in Y_train]
-    X_train = data.iloc[:, :-1].values
-    
-    
-    Y_test = test.iloc[:, -1].values 
-    Y_test = [class_mapping[class_name] for class_name in Y_test]
-    X_test = test.iloc[:, :-1].values
-    
-
-    # mlp.train(X_train, Y_train, 5000, 0.01, verbose=True)
-    # for j, (x, y, output) in enumerate(zip(X_test, Y_test, outputs)):
-        # print("Input: {} - Target: {} - Prediction: {}".format(x, y, output))
-
+    def get_decision_values(self, grid):
+        result = [(np.argmax(self.decision_function([x1, x2, x3, x4]))) for x1, x2, x3, x4 in zip(*[np.ravel(grid[name]) for name in self.point_names])]
+        values = np.array(result)
+        array_2d = values.reshape((100, 100))
+        return array_2d

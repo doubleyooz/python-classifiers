@@ -3,10 +3,11 @@ import numpy as np
 from models.Model import ModelInterface
 
 class MinimumDistance2(ModelInterface):
-  def __init__(self, class1_avg, class2_avg, pairs=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width'], point_names=['x1', 'x2']):
+  def __init__(self, class1_avg, class2_avg, classes=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width'], point_names=['x1', 'x2']):
     self.class1_avg = class1_avg
     self.class2_avg = class2_avg
-    self.pairs = pairs    
+    self.classes = classes    
+    self.class_mapping = {class_label: idx for idx, class_label in enumerate(self.classes)}
     self.point_names = point_names
     self.columns = columns
 
@@ -24,7 +25,7 @@ class MinimumDistance2(ModelInterface):
       return (d1 - d2)
 
   def classify(self, row):
-      return self.pairs[0] if self.decision_function(row) > 0 else self.pairs[1]
+      return self.classes[0] if self.decision_function(row) > 0 else self.classes[1]
 
   def surface(self, row):
       x1 = row[self.columns[0]]
