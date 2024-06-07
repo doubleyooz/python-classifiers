@@ -2,9 +2,10 @@ import numpy as np
 import pandas as pd
 
 from models.Model import ModelInterface
+from utils import swap_zero_one_explicit
 
 class BackPropagation(ModelInterface):
-    def __init__(self, df, class_column='Species', hidden_layers=[3, 3], columns_ignored=-1):
+    def __init__(self, df, class_column='Species', hidden_layers=[3], columns_ignored=-1):
         df_copy = df.copy()        
         self.columns = list(df_copy.columns[: columns_ignored])
         self.point_names = ['x' + str(i) for i in range(1, len(self.columns) + 1)]
@@ -16,12 +17,13 @@ class BackPropagation(ModelInterface):
         self.hidden_layers = hidden_layers
         
         layers = [ self.input_layer ] + self.hidden_layers + [self.output_layer]
-        
+        print(layers)
         #weights
         weights = []
         for i in range(len(layers) - 1):
             w = np.random.rand(layers[i], layers[i + 1])
             weights.append(w)
+        weights.append(np.random.rand(self.output_layer, 1))
         self.weights = weights
 
         # save derivatives per layer
@@ -29,6 +31,7 @@ class BackPropagation(ModelInterface):
         for i in range(len(layers) - 1):
             d = np.zeros((layers[i], layers[i + 1]))
             derivatives.append(d)
+        derivatives.append(np.zeros((self.output_layer, 1)))
         self.derivatives = derivatives
 
         # save activations per layer
@@ -36,7 +39,13 @@ class BackPropagation(ModelInterface):
         for i in range(len(layers)):
             a = np.zeros(layers[i])
             activations.append(a)
+        activations.append(1)
+        print('layers', layers)
+        print('activations', activations)
+        print('weights', weights)
         self.activations = activations
+      
+
       
     # forward_propagate
     def decision_function(self, inputs):
@@ -68,20 +77,22 @@ class BackPropagation(ModelInterface):
         # return output layer activation
         return activations
 
-    def back_propagate(self, error):
+    def back_propagate(self, error: np.ndarray) -> np.ndarray:
+        # print(self.derivatives      
+
         for i in reversed(range(len(self.derivatives))):
             activations = self.activations[i+1]
             delta = error * self._sigmoid_derivative(activations)
             delta_reshaped = delta.reshape(delta.shape[0], -1).T
-            
+
             current_activations = self.activations[i]
             current_activations_reshaped = current_activations.reshape(current_activations.shape[0], -1)
 
             self.derivatives[i] = np.dot(current_activations_reshaped, delta_reshaped)
             error = np.dot(delta, self.weights[i].T)
-
-      
+        # print(self.derivatives)
         return error
+
 
     def _sigmoid_derivative(self, x):
         return x * (1.0 - x)
@@ -102,12 +113,18 @@ class BackPropagation(ModelInterface):
       
     
     def gradient_descent(self, learning_rate):
+        # Check if weights or derivatives are None
+        if self.weights is None or self.derivatives is None:
+            raise ValueError("Weights or derivatives are None.")
+        
+        # Iterate over weights and derivatives
         for i in range(len(self.weights)):
-            weights = self.weights[i]
+            # Check if weights or derivatives are empty
+            if len(self.weights[i]) == 0 or len(self.derivatives[i]) == 0:
+                raise ValueError("Weights or derivatives are empty.")
             
-            derivatives = self.derivatives[i]         
-
-            weights += derivatives * learning_rate
+            # Perform gradient descent
+            self.weights[i] += self.derivatives[i] * learning_rate
 
     # train
     def fit(self, inputs, targets, epochs, learning_rate, verbose=False):
@@ -119,23 +136,25 @@ class BackPropagation(ModelInterface):
             for j, (input, target) in enumerate(zip(inputs, targets)):
                 
                 # forward propagation
-                output = self.decision_function(input)
-             
-                # calculate error
-                error = target - output 
-              
+                outputs = self.decision_function(input)
+                
+                # calculate error 
+                            
+                error = target - outputs[0]
+
+                if verbose:
+                    print("{} - Input: {} - Target: {} - Prediction: {}".format(j, input, target, outputs)) 
                 # back propagation
                 self.back_propagate(error)
 
                 # apply gradient descent
                 self.gradient_descent(learning_rate)
 
-                sum_error += self._mse(target, output)
-            if verbose:
-                print(f'Weights: {self.weights}')
-                print(f'Error: {sum_error / len(inputs)} at epoch {i}')
-            elif i == epochs - 1:
-                print(f'Weights: {self.weights}')
+                sum_error += self._mse(target, outputs[0])
+            if i == epochs - 1:
+                print('Weights: ')
+                for index, layer in enumerate(self.weights):
+                    print(f'layer({index}) ({np.array(layer).shape}): ', layer)   
                 print(f'Error: {sum_error / len(inputs)} at epoch {i}')
 
     def _mse(self, target, output):

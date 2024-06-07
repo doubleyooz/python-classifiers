@@ -20,7 +20,7 @@ def map_values(values, class_mapping, reverse=False):
         {v: k for k, v in class_mapping.items()}
     return [class_mapping[class_name] for class_name in values]
 
-def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=False, decision_boundary=True):
+def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=False, decision_boundary=True, fit=False):
    
     modified_df = data2.copy()
 
@@ -34,8 +34,8 @@ def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=
 
     Y_test = map_values(Y_test, model.class_mapping)
     # Calculate the distance for each point on the grid
-    fit = getattr(model, "fit", None)
-    if callable(fit): 
+    has_fit = getattr(model, "fit", None)
+    if callable(has_fit) and fit: 
         model.fit(inputs=X_test, targets=Y_test, learning_rate=0.01, epochs=1000)
 
     # modified_df[columns[5]] = model._naive_bayes_gaussian(X=X_test)
@@ -102,7 +102,7 @@ def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=
             plt.contour(values_grid['x3'], values_grid['x4'], decision_function_values, levels=[0], colors='purple')
         plt.title(decision_equation, fontsize=10)
         plt.legend(legend)
-  
+    print('before plot')
     # Show the plot
     plt.show()
 

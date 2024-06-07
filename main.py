@@ -6,17 +6,18 @@ import pandas as pd
 import seaborn as sns
 
 from models.BackPropagation import BackPropagation
+from models.KMeans import KMeans
 from models.MinimumDistance4 import MinimumDistance4
 from models.MinimumDistance2 import MinimumDistance2
 from models.Perceptron import Perceptron
 from models.MaxNaiveBayes import MaxNaiveBayes
-from prepareData import get_classes, get_averages
+from prepareData import get_classes, get_averages, get_pairs
 from test import use_classifier, plot_cm, print_metrics, extract_values, map_values
 
 point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
 
 '''
-data, test = get_classes(exclude='virginica')
+data, test = get_classes(exclude='virginica")
 classes = ['setosa', 'versicolor']
 c1 = MinimumDistance(class1_avg=setosa_avg, class2_avg=versicolor_avg)
 use_classifier(data, c1,  given_point=point)
@@ -24,7 +25,7 @@ use_classifier(test, c1,  given_point=point)
 plot_cm(test, c1, classes=classes)
 '''
 '''
-data, test = get_classes(exclude='versicolor')
+data, test = get_classes(exclude='versicolor")
 classes = ['virginica', 'setosa']
 c1 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, classes=classes)
 use_classifier(data, c1,  given_point=point)
@@ -34,7 +35,7 @@ plot_cm(test, c1, classes=classes)
 '''
 
 '''
-data, test = get_classes(exclude='setosa')
+data, test = get_classes(exclude='setosa")
 classes = ['virginica', 'versicolor']
 # c1 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, classes=classes)
 # c2 = MinimumDistance(class1_avg=virginica_avg, class2_avg=setosa_avg, classes=classes)
@@ -47,42 +48,11 @@ plot_cm(test, p1, classes=classes)
 
     '''
 def main():
-    menu = ["MinimumDistance4", "MinimumDistance2", "Perceptron", "MaxBayes", "BackPropagation"]
-    dict_classes = {
-        'versicolor - setosa': {
-            'exclude': 'virginica',
-            'classes': ['versicolor', 'setosa']
-        },
-        'versicolor - virginica': {
-            'exclude': 'setosa',
-            'classes': ['virginica', 'versicolor']
-        },
-
-        'virginica - setosa': {
-            'exclude': 'versicolor',
-            'classes': ['virginica', 'setosa']
-        },
-        
-     
-        'versicolor - non_versicolor': {
-            'exclude': 'versicolor',
-            'classes': ['versicolor', 'non_versicolor']
-        },
-       
-
-        'setosa - non_setosa': {
-            'exclude': 'setosa',
-            'classes': ['setosa', 'non_setosa']
-        },
-        'virginica - non_virginica': {
-            'exclude': 'virginica',
-            'classes': ['virginica', 'non_virginica' ]
-        },
-    }
+    menu = ["MinimumDistance4", "MinimumDistance2", "Perceptron", "KMeans", "MaxBayes", "BackPropagation"]
+    dict_classes = get_pairs(2)
+   
     classes_list = list(dict_classes.keys())
-    print(classes_list)
-    
-    point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
+        
     while True:              
         selected_option = show_menu_options("Select the model to be used", menu=menu, last_option="Shut down")
         print(selected_option)
@@ -100,14 +70,14 @@ def main():
             selected_class = dict_classes[classes_list[selected_option]]
         
             data, test, class1_df, class2_df, opposite_data_df = get_classes(exclude=selected_class['exclude'], classes=selected_class['classes'], overwrite_classes=True)
-     
+            get_pairs()
             class1_avg_dict , class1_avg_list = get_averages(class1_df)
             class2_avg_dict , class2_avg_list = get_averages(class2_df)
             print(class1_avg_list)
             print(class2_avg_list)
 
             while True: 
-                title = f'{selected_model} - {selected_class['classes']}'
+                title = f"{selected_model} - {selected_class['classes']}"
                 print(title)
                 datasets_list = ['training', 'test', 'full']
                 selected_option = show_menu_options("Select dataset to be used", menu=datasets_list)
@@ -121,7 +91,7 @@ def main():
                 else: 
                     selected_dataset = {'dataset': pd.concat([data, test]), 'title': datasets_list[selected_option]} 
                 
-
+                print(selected_model)
                 if selected_model == "Perceptron":
                     use_perceptron(selected_model=selected_model, selected_class=selected_class['classes'], selected_dataset=selected_dataset, exclude=selected_class['exclude'])
 
@@ -131,12 +101,15 @@ def main():
                 elif selected_model == "MaxBayes":
                     use_bayes(selected_model=selected_model, selected_dataset=selected_dataset, selected_class=selected_class['classes'])
                 
+                elif selected_model == "KMeans":
+                    use_k_means(selected_model=selected_model, selected_dataset=selected_dataset, selected_class=selected_class['classes'])
+                
                 elif selected_model == 'BackPropagation':
                     use_backpropagation(selected_model=selected_model, selected_dataset=selected_dataset, selected_class=selected_class['classes'], exclude=selected_class['exclude'])
                 
 
 def show_menu_options(title, menu, last_option="Go back"):
-    print(f'\n{title}')
+    print(f"\n{title}")
     options_list = menu + [last_option] 
     while True:
         try:
@@ -164,9 +137,9 @@ def use_minimum_distance_classifier(selected_model, selected_class, selected_dat
     else:
         c1 = MinimumDistance2(class1_avg=class1_avg_list[:2], class2_avg=class2_avg_list[:2], classes=selected_class)
 
-    print(f'class_1: {c1.class1_avg}; class_2: {c1.class2_avg}')
+    print(f"class_1: {c1.class1_avg}; class_2: {c1.class2_avg}")
     while True:
-        title = f'{selected_model} - {selected_class} - {selected_dataset['title']}'
+        title = f"{selected_model} - {selected_class} - {selected_dataset['title']}"
         print(title)
         actions_list = ['classify', 'predict_point', 'confusion_matrix', 'print_metrics']
         selected_option = show_menu_options("Select action:", menu=actions_list)
@@ -174,24 +147,53 @@ def use_minimum_distance_classifier(selected_model, selected_class, selected_dat
             break
         
         if selected_option == 0:
-            print(f'{title}: classify')
+            print(f"{title}: classify")
             use_classifier(selected_dataset['dataset'], c1)
         elif selected_option == 1:
-            print(f'{title}: predict')
+            print(f"{title}: predict")
             use_classifier(selected_dataset['dataset'], c1, given_point=point)
         elif selected_option == 2:  
-            print(f'{title}: confusion_matrix')                       
+            print(f"{title}: confusion_matrix")                       
             plot_cm(selected_dataset['dataset'], c1)
         else:  
-            print(f'{title}: print_metrics')
+            print(f"{title}: print_metrics")
             print_metrics(selected_dataset['dataset'], c1)
 
+def use_k_means(selected_model, selected_class, selected_dataset,):
+    print(len(selected_dataset['dataset']))
+  
+   
+    k1 = KMeans(k= list(selected_dataset['dataset'].columns[: -1]))    
+    print(k1.centroids, k1.k)
+
+    while True:
+        title = f"{selected_model} - {selected_class} - {selected_dataset['title']}"
+        print(title)
+        actions_list = ['classify', 'predict_point', 'confusion_matrix', 'print_metrics']
+        selected_option = show_menu_options("Select action:", menu=actions_list)
+        if selected_option == len(actions_list):
+            break
+        
+        if selected_option == 0:
+            print(f"{title}: classify")
+            use_classifier(selected_dataset['dataset'], k1)
+        elif selected_option == 1:
+            print(f"{title}: predict")
+            use_classifier(selected_dataset['dataset'], k1, given_point=point)
+        elif selected_option == 2:  
+            print(f"{title}: confusion_matrix")                       
+            plot_cm(selected_dataset['dataset'], k1)
+        else:  
+            print(f"{title}: print_metrics")
+            print_metrics(selected_dataset['dataset'], k1)
+
+     
           
 def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
     
     p1 = Perceptron(df=selected_dataset['dataset'].copy(), class_column='Species')
     while True:
-        title = f'\n{selected_model} - {selected_class} - {selected_dataset['title']} - {p1.weights}'
+        title = f"\n{selected_model} - {selected_class} - {selected_dataset['title']} - {p1.weights}"
         print(title)
         actions_list = ['classify', 'fit', 'predict_point', 'confusion_matrix', 'print_metrics']
         selected_option = show_menu_options("Select action:", menu=actions_list)
@@ -199,10 +201,26 @@ def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
             break
         
         if selected_option == 0:
-            print(f'{title}: classify')
-            use_classifier(selected_dataset['dataset'], p1)
+            print(f"{title}: classify")
+            while True:
+                title = f"\nDo you want to train before classifying?"
+                print(title)
+                actions_list = ['yes', 'no']
+                selected_option = show_menu_options("Select action:", menu=actions_list)
+                fit = True
+                if selected_option == len(actions_list):
+                    break
+                
+                if selected_option == 0:
+                    print(f"{title}: yes")
+                
+            
+                else:                
+                    print(f"{title}: no")
+                    fit = False
+                use_classifier(selected_dataset['dataset'], p1, fit=fit)
         elif selected_option == 1:
-            print(f'{title}: fit')
+            print(f"{title}: fit")
             data, test, class1_df, class2_df, opposite_data_df = get_classes(exclude=exclude, classes=selected_class, overwrite_classes=True)
             if selected_dataset['title'] == 'training':
                 dataset = data
@@ -214,13 +232,13 @@ def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
             y_test = map_values(values=y_test, class_mapping=p1.class_mapping)
             p1.fit(inputs=x_test, targets=y_test, epochs=1000, learning_rate=0.01)
         elif selected_option == 2:
-            print(f'{title}: predict')
+            print(f"{title}: predict")
             use_classifier(selected_dataset['dataset'], p1, given_point=point)
         elif selected_option == 3:  
-            print(f'{title}: confusion_matrix')                       
+            print(f"{title}: confusion_matrix")                       
             plot_cm(selected_dataset['dataset'], p1)
         else:           
-            print(f'{title}: print_metrics')
+            print(f"{title}: print_metrics")
             print_metrics(selected_dataset['dataset'], p1)
             
 
@@ -229,30 +247,49 @@ def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
 def use_bayes(selected_model, selected_class, selected_dataset):
     print(len(selected_dataset['dataset']))
   
-    bayes_1 = MaxNaiveBayes(df=selected_dataset['dataset'].copy(), class_column='Species')
+    
 
     while True:
-        title = f'\n{selected_model} - {selected_class} - {selected_dataset['title']}'
+        title = f"\n{selected_model} - {selected_class} - {selected_dataset['title']}"
         print(title)
-        actions_list = ['classify', 'predict_point', 'confusion_matrix', 'print_metrics']
+        actions_list = ['gaussian', 'categorical']
         selected_option = show_menu_options("Select action:", menu=actions_list)
+        gaussian = True
         if selected_option == len(actions_list):
             break
         
         if selected_option == 0:
-            print(f'{title}: classify')
-            use_classifier(selected_dataset['dataset'], bayes_1, decision_boundary=True)
+            print(f"{title}: gaussian")
+           
       
-        elif selected_option == 1:                
-            print(f'{title}: predict')
-            use_classifier(selected_dataset['dataset'], bayes_1, given_point=point, decision_boundary=True)
-        elif selected_option == 2:                
-            print(f'{title}: confusion_matrix')                       
-            plot_cm(selected_dataset['dataset'], bayes_1)       
-        else:  
-            print(f'{title}: print_metrics')
-            print_metrics(selected_dataset['dataset'], bayes_1)
-                  
+        else:                
+            print(f"{title}: categorical")
+            gaussian = False
+     
+
+        bayes_1 = MaxNaiveBayes(df=selected_dataset['dataset'].copy(), class_column='Species', gaussian=gaussian)
+        while True:
+            title = f"\n{selected_model} - {selected_class} - {selected_dataset['title']}"
+            print(title)
+            actions_list = ['classify', 'predict_point', 'confusion_matrix', 'print_metrics']
+            selected_option = show_menu_options("Select action:", menu=actions_list)
+            if selected_option == len(actions_list):
+                break
+            
+            if selected_option == 0:
+                print(f"{title}: classify")
+                use_classifier(selected_dataset['dataset'], bayes_1, decision_boundary=True)
+        
+            elif selected_option == 1:                
+                print(f"{title}: predict")
+                use_classifier(selected_dataset['dataset'], bayes_1, given_point=point, decision_boundary=True)
+            elif selected_option == 2:                
+                print(f"{title}: confusion_matrix")                       
+                plot_cm(selected_dataset['dataset'], bayes_1)       
+            else:  
+                print(f"{title}: print_metrics")
+                print_metrics(selected_dataset['dataset'], bayes_1)
+                    
 
 
 def use_backpropagation(selected_model, selected_class, selected_dataset, exclude):
@@ -261,7 +298,7 @@ def use_backpropagation(selected_model, selected_class, selected_dataset, exclud
     back_prop1 = BackPropagation(df=selected_dataset['dataset'].copy(), class_column='Species')
 
     while True:
-        title = f'\n{selected_model} - {selected_class} - {selected_dataset['title']}'
+        title = f"\n{selected_model} - {selected_class} - {selected_dataset['title']}"
         print(title)
         # back_prop1.initialise(df=selected_dataset['dataset'].copy(), Y='Species')
         actions_list = ['train', 'classify', 'predict_point', 'confusion_matrix', 'print_metrics']
@@ -274,7 +311,7 @@ def use_backpropagation(selected_model, selected_class, selected_dataset, exclud
             break
         
         if selected_option == 0:
-            print(f'{title}: train')
+            print(f"{title}: train")
             # use_classifier(selected_dataset['dataset'], back_prop1, decision_boundary=True)
           
             data, test, class1_df, class2_df, opposite_data_df = get_classes(exclude=exclude, classes=selected_class, overwrite_classes=True)
@@ -291,7 +328,7 @@ def use_backpropagation(selected_model, selected_class, selected_dataset, exclud
             back_prop1.fit(x_test, y_test, epochs=5000, learning_rate=0.01)
         
         elif selected_option == 1: 
-            print(f'{title}: classify')    
+            print(f"{title}: classify")    
                 
             '''
             outputs = back_prop1.decision_function(X_test)
@@ -299,18 +336,37 @@ def use_backpropagation(selected_model, selected_class, selected_dataset, exclud
                 print("{} - Input: {} - Target: {} - Prediction: {}".format(j, x, y, output))   
             '''
             
-            use_classifier(selected_dataset['dataset'], back_prop1, given_point=point, decision_boundary=True)
+            while True:
+                title = f"\nDo you want to train before classifying?"
+                print(title)
+                actions_list = ['yes', 'no']
+                selected_option = show_menu_options("Select action:", menu=actions_list)
+                fit = True
+                if selected_option == len(actions_list):
+                    break
+                
+                if selected_option == 0:
+                    print(f"{title}: yes")
+                
             
+                else:                
+                    print(f"{title}: no")
+                    fit = False
                
+                use_classifier(selected_dataset['dataset'], back_prop1, given_point=point, decision_boundary=True, fit=fit)
+            
+            print('weights')
+            for index, layer in enumerate(back_prop1.weights):
+                print(f'layer({index}) ({np.array(layer).shape}): ', layer)   
         elif selected_option == 2:                
-            print(f'{title}: predict')
+            print(f"{title}: predict")
             use_classifier(selected_dataset['dataset'], back_prop1, given_point=point, decision_boundary=True)
        
         elif selected_option == 3:                
-            print(f'{title}: confusion_matrix')                       
+            print(f"{title}: confusion_matrix")                       
             plot_cm(selected_dataset['dataset'], back_prop1)
         else:  
-            print(f'{title}: print_metrics')
+            print(f"{title}: print_metrics")
             print_metrics(selected_dataset['dataset'], back_prop1)
        
   

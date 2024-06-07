@@ -1,3 +1,4 @@
+import itertools
 import pandas as pd
 import numpy as np
 import random
@@ -62,18 +63,38 @@ def get_averages(data_df = None, features=['Sepal length', 'Sepal width', 'Petal
         averages_array.append(data_df[feature].mean())
     return averages, averages_array
 
-def get_classes(exclude = 'virginica', column='Species', classes = ['virginica', 'setosa', 'versicolor'], generate_numbers = False, seed=None, overwrite_classes=False):
+
+
+def get_pairs(number_of_classes = 2):
+    classes = sorted(list(df['Species'].unique()))
+    permutations = list(itertools.combinations(classes, number_of_classes))
+    opposite_permutations = list((cl, 'non_' + cl) for cl in classes)
+  
+    temp = {}
+    for permutation in permutations:
+        temp[permutation[0] + ' - ' + permutation[1]] = {
+            'classes': list(permutation),
+            'exclude': [element for element in classes if element not in permutation][0]
+        }
+
+    for permutation in opposite_permutations:
+        temp[permutation[0] + ' - ' + permutation[1]] = {
+            'classes': list(permutation),
+            'exclude': permutation[0]
+        }
+
+    
+    return temp
+
+def get_classes(exclude = 'virginica', column='Species', classes = ['virginica', 'setosa', 'versicolor'], generate_numbers = False, seed=None, columns_ignored = -1 ,overwrite_classes = False):
     
     print(f'exclude={exclude}')
     if generate_numbers:
         samples = 100
-        random_values = {
-            'Sepal length': np.random.uniform(0.5, 10, samples),
-            'Sepal width': np.random.uniform(0.5, 10, samples),
-            'Petal length': np.random.uniform(0.5, 10, samples),
-            'Petal width': np.random.uniform(0.5, 10, samples)
-        }
+       
+        random_values = {col: np.random.uniform(0.5, 10, samples) for col in list(df.columns[:columns_ignored])}
 
+       
         # Create the DataFrame
         data_df = pd.DataFrame(random_values)       
       
@@ -136,6 +157,9 @@ def get_classes(exclude = 'virginica', column='Species', classes = ['virginica',
     print(f'non_{exclude}_df size: {len(data_df)}')
     return data, test, class1_df, class2_df, opposite_data_df
 
+def get_points(labels, min=0, max=10, samples = 100):    
+    return {col: np.random.uniform(min, max, samples) for col in list(labels)}
+
 
 
 def load_csv(self, filepath):
@@ -153,9 +177,3 @@ def load_csv(self, filepath):
         finally:
             return None
 
-
-# petal width and petal length are basically the same so I taking one of them out
-data = data[['Sepal length', 'Sepal width', 'Petal length', 'Petal width', 'Species']]
-test = test[['Sepal length', 'Sepal width', 'Petal length', 'Petal width', 'Species']]
-
-data.tail(6)

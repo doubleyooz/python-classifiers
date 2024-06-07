@@ -4,7 +4,13 @@ import numpy as np
 
 class KMeans:
 
-    def __init__(self, k=3):
+    def __init__(self, df, class_column, columns_ignored=-1, k = 3):
+     
+        df_copy = df.copy()
+        self.df = {}
+        self.columns = list(df_copy.columns[: columns_ignored])
+        self.class_column = class_column
+
         self.k = k
         self.centroids = None
 
@@ -49,7 +55,7 @@ class KMeans:
                 self.centroids = np.array(cluster_centers)
         return y
     
-
+'''
 random_points = np.random.randint(0, 100, size=(100, 2))
 
 kmeans = KMeans(k=3)
@@ -61,3 +67,4 @@ plt.scatter(random_points[:, 0], random_points[:, 1], c=labels)
 plt.scatter(kmeans.centroids[:, 0], kmeans.centroids[:, 1], c=range(len(kmeans.centroids)), marker='*', s=200)
 
 plt.show()
+'''
