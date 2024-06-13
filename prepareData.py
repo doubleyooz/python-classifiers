@@ -2,7 +2,6 @@ import itertools
 import pandas as pd
 import numpy as np
 import random
-from sklearn.metrics import confusion_matrix
 
 from models.MinimumDistance4 import MinimumDistance4
     

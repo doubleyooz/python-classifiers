@@ -1,6 +1,6 @@
 import numpy as np
 from models.Model import ModelInterface
-from utils import _unit_step_func
+from utils.npHelper  import _unit_step_func
 
 class Perceptron(ModelInterface):
   def __init__(self, df, class_column='Species', columns_ignored=-1):
@@ -14,9 +14,12 @@ class Perceptron(ModelInterface):
     self.errors = []
     self.weights = None
     self.metrics = {
-          'fscore': 0,
-          'kappa': 0,
-          'matthews': 0
+        'fscore': 0,
+        'kappa': 0,
+        'matthews': 0,
+        'precision': 0,
+        'accuracy': 0,
+        'recall': 0
       }
        
   def classify(self, row):

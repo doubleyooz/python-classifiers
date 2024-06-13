@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from models.Model import ModelInterface
-from utils import swap_zero_one_explicit
+from utils.npHelper import _sigmoid, _sigmoid_derivative
 
 class BackPropagation(ModelInterface):
     def __init__(self, df, class_column='Species', hidden_layers=[3], columns_ignored=-1):
@@ -44,8 +44,15 @@ class BackPropagation(ModelInterface):
         print('activations', activations)
         print('weights', weights)
         self.activations = activations
+        self.metrics = {
+          'fscore': 0,
+          'kappa': 0,
+          'matthews': 0,
+          'precision': 0,
+          'accuracy': 0,
+          'recall': 0
+        }
       
-
       
     # forward_propagate
     def decision_function(self, inputs):
@@ -69,7 +76,7 @@ class BackPropagation(ModelInterface):
             net_inputs = np.dot(activations, w)
 
             # apply sigmoid activation function
-            activations = self._sigmoid(net_inputs)
+            activations = _sigmoid(net_inputs)
 
             # save the activations for backpropagation
             self.activations[i + 1] = activations
@@ -82,7 +89,7 @@ class BackPropagation(ModelInterface):
 
         for i in reversed(range(len(self.derivatives))):
             activations = self.activations[i+1]
-            delta = error * self._sigmoid_derivative(activations)
+            delta = error * _sigmoid_derivative(activations)
             delta_reshaped = delta.reshape(delta.shape[0], -1).T
 
             current_activations = self.activations[i]
@@ -94,12 +101,7 @@ class BackPropagation(ModelInterface):
         return error
 
 
-    def _sigmoid_derivative(self, x):
-        return x * (1.0 - x)
-
-    def _sigmoid(self, x):       
-        return 1.0/(1.0 + np.exp(-x))
-    
+   
     def classify(self, row):
         # print(self.classes[0] if self.decision_function(row) > 0 else self.classes[1])
        

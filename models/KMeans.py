@@ -15,9 +15,12 @@ class KMeans:
         self.centroids = None
 
         self.metrics = {
-            'fscore': 0,
-            'kappa': 0,
-            'matthews': 0
+          'fscore': 0,
+          'kappa': 0,
+          'matthews': 0,
+          'precision': 0,
+          'accuracy': 0,
+          'recall': 0
         }
 
     @staticmethod

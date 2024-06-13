@@ -6,7 +6,8 @@ from sklearn.metrics import confusion_matrix, f1_score, cohen_kappa_score, matth
 
 from models.Model import ModelInterface
 from models.MaxNaiveBayes import MaxNaiveBayes
-from utils import get_grid_values
+from utils.npHelper import get_grid_values
+from utils.metrics import accuracy, f1, precision, recall
 columns = ['Sepal length', 'Sepal width', 'Petal length', 'Petal width', 'Species', 'Predicted Species']
 
 def extract_values(dataframe, skip_columns=-1):
@@ -15,6 +16,16 @@ def extract_values(dataframe, skip_columns=-1):
 
     return X_test, Y_test
    
+def extract_y_test_y_pred(dataframe, model, pred_col="Prediction", skip_columns=-1, map_values=False):
+    X_test, Y_test = extract_values(dataframe, skip_columns)
+    dataframe[pred_col] = dataframe.iloc[:, :-1].apply(model.classify, axis=1)
+    
+    if map_values:
+        dataframe[pred_col] = dataframe[pred_col].map(model.class_mapping)      
+        
+
+    return X_test, Y_test, dataframe[pred_col]
+
 def map_values(values, class_mapping, reverse=False):
     if reverse:
         {v: k for k, v in class_mapping.items()}
@@ -38,14 +49,12 @@ def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=
     if callable(has_fit) and fit: 
         model.fit(inputs=X_test, targets=Y_test, learning_rate=0.01, epochs=1000)
 
-    # modified_df[columns[5]] = model._naive_bayes_gaussian(X=X_test)
-    modified_df[columns[5]] = modified_df.iloc[:, :-1].apply(model.classify, axis=1)
-    modified_df[columns[5]] = modified_df[columns[5]].map(model.class_mapping)
-   
+    _, _, Y_pred = extract_y_test_y_pred(dataframe=modified_df, model=model, pred_col=columns[5], map_values=True)
+    
+  
     print(modified_df.head(10))
    
-    print(confusion_matrix(Y_test, modified_df[columns[5]]))
-    print(f1_score(Y_test, modified_df[columns[5]]))
+    print(confusion_matrix(Y_test, Y_pred))
   
   
     # Plot the data points
@@ -102,16 +111,14 @@ def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=
             plt.contour(values_grid['x3'], values_grid['x4'], decision_function_values, levels=[0], colors='purple')
         plt.title(decision_equation, fontsize=10)
         plt.legend(legend)
-    print('before plot')
+  
     # Show the plot
     plt.show()
 
 
 
 def plot_cm(data2, model):
-    data_df = data2.copy()
-
- 
+    data_df = data2.copy() 
     
     #guarantees we have only two values
     data_df.loc[data_df[columns[4]] != model.classes[0], columns[4]] = model.classes[1]
@@ -121,11 +128,10 @@ def plot_cm(data2, model):
     # Apply the model to the test set   
     data_df[columns[5]] = data_df.iloc[:, :-1].apply(model.classify, axis=1)
     mismatches = data_df[data_df[columns[4]] != data_df[columns[5]]]
-
+ 
+    x_test, y_test, y_pred = extract_y_test_y_pred(dataframe=data_df, model=model, pred_col=columns[5])
     
-    x_test, y_test = extract_values(data_df.iloc[:, :-1])
-    x_test, y_pred = extract_values(data_df)
-
+  
     print(f'Errors found: {len(mismatches)}')
     if(mismatches.size > 0):
         print(mismatches)
@@ -145,7 +151,6 @@ def plot_cm(data2, model):
     plt.show()
  
 
-
     '''
     'micro': Computes metrics globally by counting true positives, false negatives, and false positives across all classes.
     'macro': Calculates metrics for each label and finds their unweighted mean.
@@ -157,28 +162,34 @@ def plot_cm(data2, model):
     f1_micro = f1_score(y_test, y_pred, average='micro')
     f1_weighted = f1_score(y_test, y_pred, average='weighted')
     print(f1_macro, f1_micro, f1_weighted)
-    '''
-
+    ''' 
  
+def calculate_metrics (dataframe, model):
+    data_df = dataframe.copy()    
+
+    x_test, y_test, y_pred = extract_y_test_y_pred(dataframe=data_df, model=model, pred_col=columns[5], map_values=True)
    
-    # save metrics
-    model.metrics['fscore'] = f1_score(y_test, y_pred, average='weighted')
+    y_test = y_test.tolist()
+    y_pred = y_pred.tolist()
+
+    y_test = map_values(y_test, model.class_mapping)   
+
+    model.metrics['fscore'] = f1(y_test, y_pred)
+    model.metrics['precision'] = precision(y_test, y_pred)
+    model.metrics['recall'] = recall(y_test, y_pred)
+
+    model.metrics['accuracy'] = accuracy(y_test, y_pred)    
     model.metrics['kappa'] = cohen_kappa_score(y_test, y_pred)
     model.metrics['matthews'] = matthews_corrcoef(y_test, y_pred)
-    
- 
+   
 
+def print_metrics (model):    
+    print(f"F1-score: {model.metrics['fscore']:.4f}")    
+    print(f"precision: {model.metrics['precision']:.4f}")
+    print(f"recall: {model.metrics['recall']:.4f}")
 
-def print_metrics (data2, model):
-    data_df = data2.copy()
-
-    #guarantees we have only two values
-    data_df.loc[data_df[columns[4]] != model.classes[0], columns[4]] = model.classes[1]
-    print(len(data_df))
-    
-  
-  
-    print(f"F1-score: {model.metrics['fscore']:.4f}")
+    print(f"accuracy: {model.metrics['accuracy']:.4f}")
     print(f"Cohen's Kappa: {model.metrics['kappa']:.4f}")
     print(f"Matthews Correlation Coefficient: {model.metrics['matthews']:.4f}")
+    
   

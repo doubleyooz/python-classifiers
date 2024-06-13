@@ -11,9 +11,12 @@ class MinimumDistance2(ModelInterface):
     self.point_names = point_names
     self.columns = columns
     self.metrics = {
-          'fscore': 0,
-          'kappa': 0,
-          'matthews': 0
+        'fscore': 0,
+        'kappa': 0,
+        'matthews': 0,
+        'precision': 0,
+        'accuracy': 0,
+        'recall': 0
       }
 
   def decision_function(self, row):

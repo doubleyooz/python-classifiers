@@ -1,19 +1,20 @@
+
 import numpy as np
+
+def _sigmoid_derivative(self, x):
+    return x * (1.0 - x)
+
+def _sigmoid(self, x):       
+    return 1.0/(1.0 + np.exp(-x))
 
 def _unit_step_func(x):
     return np.where(x>=0, 1, 0)
 
+def re_lu(Z):
+    return np.maximum(0, Z)
 
-def get_grid_values(data_df, columns, samples=100):
-
-    x1_values = np.linspace(data_df[columns[0]].min(), data_df[columns[0]].max(), 100)
-    x2_values = np.linspace(data_df[columns[1]].min(), data_df[columns[1]].max(), 100)
-    x3_values = np.linspace(data_df[columns[2]].min(), data_df[columns[2]].max(), 100)
-    x4_values = np.linspace(data_df[columns[3]].min(), data_df[columns[3]].max(), 100)
-
-    x1_grid, x2_grid = np.meshgrid(x1_values, x2_values)
-    x3_grid, x4_grid = np.meshgrid(x3_values, x4_values)
-    return {'x1': x1_grid, 'x2': x2_grid, 'x3': x3_grid, 'x4':  x4_grid}
+def softmax(Z):
+    return np.exp(Z) / np.sum(np.exp(Z))
 
 def swap_zero_one_explicit(num):
     if num == 0:
@@ -23,6 +24,7 @@ def swap_zero_one_explicit(num):
     else:
         raise ValueError("Input must be 0 or 1")
     
+       
 def get_grid_values(data_df, columns, samples=100):
     # Initialize an empty dictionary to store the grids
     grids = {}
