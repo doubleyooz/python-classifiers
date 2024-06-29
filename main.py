@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 
-
 from models.BackPropagation import BackPropagation
 from models.KMeans import KMeans
 from models.MinimumDistance4 import MinimumDistance4
@@ -12,6 +11,8 @@ from prepareData import get_classes, get_averages, get_pairs
 from test import use_classifier, plot_cm, calculate_metrics, print_metrics, extract_values, map_values
 
 point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
+# Set the decimal separator to a comma
+
 
 def main():
     menu = ["MinimumDistance4", "MinimumDistance2", "Perceptron", "KMeans", "MaxBayes", "BackPropagation"]
@@ -288,7 +289,27 @@ def use_backpropagation(selected_model, selected_class, selected_dataset, exclud
             
             x_test, y_test = extract_values(dataset)
             y_test = map_values(values=y_test, class_mapping=back_prop1.class_mapping)
-            back_prop1.fit(x_test, y_test, epochs=5000, learning_rate=0.01)
+         
+            while True:
+                try:
+                    epochs = int(input("Enter the number of epochs: "))   
+                    hanstRanYet = True  
+                    while hanstRanYet:
+                        try:
+                            lr = float(input("Enter the learning rate (e.g., 0.01): "))
+                            print(f"{lr}: {type(lr)}")
+                              # Submit the fit method to a thread pool
+                            back_prop1.fit(inputs=x_test, targets=y_test, epochs=epochs, learning_rate=lr)
+                            break                           
+                        
+                        except Exception as e:
+                            print(e)
+                            print("Please enter a valid float for the learning_rate.") 
+                    break;           
+                    
+                except ValueError:
+                    print("Please enter a valid integer for the number of epochs.")
+    
         
         elif selected_option == 1: 
             print(f"{title}: classify")    

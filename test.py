@@ -125,13 +125,13 @@ def plot_cm(data2, model):
     print(len(data_df))    
     print(data_df.head(5))
 
-    # Apply the model to the test set   
-    data_df[columns[5]] = data_df.iloc[:, :-1].apply(model.classify, axis=1)
-    mismatches = data_df[data_df[columns[4]] != data_df[columns[5]]]
- 
+  
     x_test, y_test, y_pred = extract_y_test_y_pred(dataframe=data_df, model=model, pred_col=columns[5])
     
+    # Apply the model to the test set   
   
+    mismatches = data_df[data_df[columns[4]] != data_df[columns[5]]]
+ 
     print(f'Errors found: {len(mismatches)}')
     if(mismatches.size > 0):
         print(mismatches)

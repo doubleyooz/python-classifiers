@@ -21,19 +21,21 @@ class Perceptron(ModelInterface):
         'accuracy': 0,
         'recall': 0
       }
+    self.weights = np.zeros(len(self.columns))
+    self.bias = 0
        
   def classify(self, row):
     result = [row[col] for col in self.columns]
 
     return self.classes[0] if self.decision_function(result) > 0 else self.classes[1]
 
-  def fit(self, inputs, targets, learning_rate=0.01, epochs=1000):
-  
-    n_samples, n_features = inputs.shape
-    
-    # init parameters
-    self.weights = np.zeros(n_features)
-    self.bias = 0
+  def fit(self, inputs, targets, learning_rate=0.01, epochs=10000, reset_weights = False):
+
+    if reset_weights:
+      self.weights = np.zeros(len(self.columns))
+      self.bias = 0
+
+    # init parameters      
     current_interaction = 0
     change = True      
                        
@@ -51,12 +53,14 @@ class Perceptron(ModelInterface):
                 #             1            0 =  1
                 #             0            1 = -1
         update = learning_rate * (targets[index] - y_predicted) 
-
-              
+        if y_predicted != targets[index]:
+          print(f'update: {update}, y_predicted: {y_predicted}, target: {targets[index]}')      
         self.weights += update * x_i
         self.bias += update
         change = True
+      
         current_interaction += 1
+      
         if current_interaction >= epochs:
             break
        
@@ -91,8 +95,18 @@ class Perceptron(ModelInterface):
 
 
   def get_decision_values(self, grid):
-    result = [self.decision_function([x1, x2, x3, x4]) for x1, x2, x3, x4 in zip(*[np.ravel(grid[name]) for name in self.point_names])]
-  
+    if grid is None:
+      raise ValueError("grid cannot be None")
+
+    values = [np.ravel(grid.get(name)) for name in self.point_names]
+    
+    for idx, value in enumerate(values):
+      if value is None:
+        raise ValueError(f"grid does not contain {self.point_names[idx]}")
+    
+    
+    result = [self.decision_function(x) for x in zip(*values)]
+
     array_2d = np.array(result).reshape((100, 100))
     return array_2d
   

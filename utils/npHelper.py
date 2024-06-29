@@ -1,10 +1,10 @@
 
 import numpy as np
 
-def _sigmoid_derivative(self, x):
+def _sigmoid_derivative(x):
     return x * (1.0 - x)
 
-def _sigmoid(self, x):       
+def _sigmoid(x):       
     return 1.0/(1.0 + np.exp(-x))
 
 def _unit_step_func(x):

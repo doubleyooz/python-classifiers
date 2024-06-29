@@ -40,9 +40,20 @@ class BackPropagation(ModelInterface):
             a = np.zeros(layers[i])
             activations.append(a)
         activations.append(1)
+
+        # save bias per layer
+        biases = []
+        for i in range(len(layers)):
+            a = np.ones(layers[i])
+            biases.append(a)
+        biases.append(1)
+        self.biases = biases
+
+
         print('layers', layers)
         print('activations', activations)
         print('weights', weights)
+        print('biases', biases)
         self.activations = activations
         self.metrics = {
           'fscore': 0,
@@ -72,6 +83,7 @@ class BackPropagation(ModelInterface):
 
         # iterate through the network layers
         for i, w in enumerate(self.weights):
+           
             # calculate matrix multiplication between previous activation and weight matrix
             net_inputs = np.dot(activations, w)
 
@@ -125,12 +137,15 @@ class BackPropagation(ModelInterface):
             if len(self.weights[i]) == 0 or len(self.derivatives[i]) == 0:
                 raise ValueError("Weights or derivatives are empty.")
             
+            print(f'{self.derivatives[i]} * {learning_rate} =  {self.derivatives[i] * learning_rate}')
+            print(f'self.biases[{i}]: {self.biases[i]}')
             # Perform gradient descent
-            self.weights[i] += self.derivatives[i] * learning_rate
+            self.weights[i] += np.add(self.derivatives[i] * learning_rate, self.biases[i])
 
-    # train
+   # train
     def fit(self, inputs, targets, epochs, learning_rate, verbose=False):
         print(f'Learning rate: {learning_rate}, epochs: {epochs}')
+       
         for i in range(epochs):
             sum_error = 0
             if i % 10 == 0:
