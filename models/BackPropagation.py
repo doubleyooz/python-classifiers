@@ -137,10 +137,11 @@ class BackPropagation(ModelInterface):
             if len(self.weights[i]) == 0 or len(self.derivatives[i]) == 0:
                 raise ValueError("Weights or derivatives are empty.")
             
-            print(f'{self.derivatives[i]} * {learning_rate} =  {self.derivatives[i] * learning_rate}')
-            print(f'self.biases[{i}]: {self.biases[i]}')
+            # print(f'{self.derivatives[i]} * {learning_rate} =  {self.derivatives[i] * learning_rate}')
+            # print(f'self.biases[{i}]: {self.biases[i]}')
             # Perform gradient descent
-            self.weights[i] += np.add(self.derivatives[i] * learning_rate, self.biases[i])
+            print(f'self.derivatives[i]: {self.derivatives[i]}')
+            self.weights[i] += self.derivatives[i] * learning_rate # self.biases[i]
 
    # train
     def fit(self, inputs, targets, epochs, learning_rate, verbose=False):

@@ -29,7 +29,14 @@ class Perceptron(ModelInterface):
 
     return self.classes[0] if self.decision_function(result) > 0 else self.classes[1]
 
-  def fit(self, inputs, targets, learning_rate=0.01, epochs=10000, reset_weights = False):
+  def fit(self, inputs, targets, learning_rate=0.01, epochs=10000, plateau_tolerance = 20, reset_weights = False, verbose=False):
+    print('fit')
+    max_lr = 0.9
+    min_lr = 0.001
+    if learning_rate > 1:
+        learning_rate = max_lr
+    elif learning_rate <= 0:
+        learning_rate = min_lr
 
     if reset_weights:
       self.weights = np.zeros(len(self.columns))
@@ -37,11 +44,13 @@ class Perceptron(ModelInterface):
 
     # init parameters      
     current_interaction = 0
-    change = True      
+    plateau = 0
+    disturbance = 0
+        
                        
-    while change and current_interaction < epochs:
+    while current_interaction < epochs and plateau < len(inputs) - 2:
       error = 0
-      change = False
+     
       for index, x_i in enumerate(inputs):
         # Ensure x_i is a numpy array
         if type(x_i) is not np.ndarray:
@@ -53,21 +62,46 @@ class Perceptron(ModelInterface):
                 #             1            0 =  1
                 #             0            1 = -1
         update = learning_rate * (targets[index] - y_predicted) 
+            
+        self.weights += update * x_i + self.bias
+        self.bias = update
+       
         if y_predicted != targets[index]:
-          print(f'update: {update}, y_predicted: {y_predicted}, target: {targets[index]}')      
-        self.weights += update * x_i
-        self.bias += update
-        change = True
-      
+         
+          plateau = 0
+          disturbance += 1
+          
+        else:
+          plateau += 1 
+          disturbance = 0
+
+        if plateau >= plateau_tolerance and learning_rate > min_lr:
+         
+          learning_rate *= 0.5
+          if verbose:
+            print(f'update: {update}, plateau: {plateau}, learning_rate: {learning_rate}')
+          plateau = 0
+          
+            
+
+        elif disturbance >= plateau_tolerance/2 and learning_rate < max_lr:
+          learning_rate *= 1.5
+          if verbose:
+            print(f'update: {update},  disturbance: {disturbance}, learning_rate: {learning_rate}')
+          disturbance = 0
+        
+
         current_interaction += 1
-      
-        if current_interaction >= epochs:
-            break
+       
+       
+        if current_interaction >= epochs:         
+          break
        
         error += int(update != 0)
       self.errors.append(error)
 
-    if change:
+    print(f'final learning_rate: {learning_rate}, plateau: {plateau}, disturbance: {disturbance}')
+    if plateau > len(inputs):
         print(f'did not converge after {current_interaction} updates')
     else:
         print(f'converged after {current_interaction} iterations!')
@@ -94,22 +128,6 @@ class Perceptron(ModelInterface):
   
 
 
-  def get_decision_values(self, grid):
-    if grid is None:
-      raise ValueError("grid cannot be None")
-
-    values = [np.ravel(grid.get(name)) for name in self.point_names]
-    
-    for idx, value in enumerate(values):
-      if value is None:
-        raise ValueError(f"grid does not contain {self.point_names[idx]}")
-    
-    
-    result = [self.decision_function(x) for x in zip(*values)]
-
-    array_2d = np.array(result).reshape((100, 100))
-    return array_2d
-  
   def decision_function(self, x):
     linear_output = np.dot(x, self.weights) + self.bias# x * w0, missing bias
    

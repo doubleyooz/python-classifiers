@@ -59,3 +59,21 @@ def get_grid_values(data_df, columns, samples=100):
     
     
     return grids
+
+
+def get_decision_values(grid, point_names: list[str], decision_function):
+    if grid is None:
+        raise ValueError("grid cannot be None")
+
+    values = [np.ravel(grid.get(name)) for name in point_names]
+
+    for idx, value in enumerate(values):
+        if value is None:
+            raise ValueError(f"grid does not contain {point_names[idx]}")
+
+   
+    result = [decision_function(x) for x in zip(*values)]
+    # print(result)
+    array_2d = np.array(result).reshape((100, 100))
+    return array_2d
+  

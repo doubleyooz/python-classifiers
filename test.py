@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix, f1_score, cohen_kappa_score, matth
 
 from models.Model import ModelInterface
 from models.MaxNaiveBayes import MaxNaiveBayes
-from utils.npHelper import get_grid_values
+from utils.npHelper import get_decision_values, get_grid_values
 from utils.metrics import accuracy, f1, precision, recall
 columns = ['Sepal length', 'Sepal width', 'Petal length', 'Petal width', 'Species', 'Predicted Species']
 
@@ -82,7 +82,8 @@ def use_classifier (data2, model: ModelInterface, given_point=None, old_entries=
 
   
     if decision_boundary:       
-        decision_function_values = model.get_decision_values(values_grid)
+        #decision_function_values = model.get_decision_values(values_grid)
+        decision_function_values = get_decision_values(values_grid, model.point_names, model.decision_function)
         plt.contour(values_grid['x1'], values_grid['x2'], decision_function_values, levels=[0], colors='purple')
 
     # Customize the plot

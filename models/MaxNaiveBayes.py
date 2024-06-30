@@ -39,7 +39,7 @@ class MaxNaiveBayes(ModelInterface):
 
   
     def classify(self, row): 
-        return self.classes[0] if np.argmax(self.decision_function(row)) < 1 else self.classes[1]
+        return self.classes[0] if self.decision_function(row) < 1 else self.classes[1]
 
 
     def get_equation(self):
@@ -50,20 +50,16 @@ class MaxNaiveBayes(ModelInterface):
 
 
     def predict(self, point):
-        row = {col: point[point_name] for col, point_name in zip(self.columns, self.point_names)}
+        if point is None:
+            raise ValueError("point cannot be None")
+        row = [point.get(point_name) for point_name in self.point_names]    
         return self.classify(row)
 
     '''
     Calculating the decision boundary for a Naive Bayes classifier, especially when dealing with Gaussian-distributed features,
     involves understanding how the classifier makes decisions based on the posterior probabilities;
     '''
-    def get_decision_values(self, grid):
-        result = [(np.argmax(self.decision_function({self.columns[0]: x1, self.columns[1]: x2, self.columns[2]: x3, self.columns[3]: x4}))) for x1, x2, x3, x4 in zip(*[np.ravel(grid[name]) for name in self.point_names])]
-
-        values = np.array(result)
-        array_2d = values.reshape((100, 100))
-        return array_2d
-
+    
     def decision_function(self, x):
        
         # calculate likelihood    
@@ -73,14 +69,17 @@ class MaxNaiveBayes(ModelInterface):
 
         for j in range(number_of_classes): # loop over every class
 
-            for i in self.columns:   # loop over every feature
+            for idx, i in enumerate(self.columns):   # loop over every feature
                 # multiply individual conditional probabilities to get the likelihood
-                # print(i, x[i], self.classes[j])                    
+                # print(i, x[i], self.classes[j]) 
+                # print(f"x[idx]: {x[idx]}, idx: {idx}, i: {i}")
+                # print(f"x[i]: {x[i]}, i: {i}\n")
+                              
                                                                     # feature_name,   val, 'class'   
                 if self.gaussian:
-                    likelihood[j] *= self._calculate_likelihood_gaussian(i, x[i], self.classes[j])
+                    likelihood[j] *= self._calculate_likelihood_gaussian(i, x[idx], self.classes[j])
                 else:
-                    likelihood[j] *= self.calculate_likelihood_categorically(i, x[i], self.classes[j])
+                    likelihood[j] *= self.calculate_likelihood_categorically(i, x[idx], self.classes[j])
 
         # calculate posterior probability (numerator only)
         post_prob = [1]*number_of_classes
@@ -88,8 +87,8 @@ class MaxNaiveBayes(ModelInterface):
         # loop over all classes
         for j in range(number_of_classes):
             post_prob[j] = likelihood[j] * self.prior[j]
-    
-        return post_prob
+        return  np.argmax(post_prob)
+       
     
     
     def calculate_likelihood_categorically(self, feat_name, feat_value,  class_value):       

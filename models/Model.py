@@ -19,7 +19,3 @@ class ModelInterface(ABC):
     @abstractmethod
     def get_equation(self):
         pass
-
-    @abstractmethod
-    def get_decision_values(self, grid, columns):
-        pass

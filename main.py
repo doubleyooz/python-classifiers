@@ -197,7 +197,29 @@ def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
                 dataset = pd.concat([data, test])
             x_test, y_test = extract_values(dataset)
             y_test = map_values(values=y_test, class_mapping=p1.class_mapping)
-            p1.fit(inputs=x_test, targets=y_test, epochs=1000, learning_rate=0.01)
+
+            while True:
+                try:
+                    epochs = int(input("Enter the number of epochs: ") or 1000)   
+                    hanstRanYet = True  
+                    while hanstRanYet:
+                        try:
+                            lr = float(input("Enter the learning rate (e.g., 0.01): ") or 0.01)
+                            print(f"{lr}: {type(lr)}")
+                            # Submit the fit method to a thread pool
+                            print(f'epochs: {epochs}, lr: {lr}')
+                            p1.fit(inputs=x_test, targets=y_test, epochs=epochs, learning_rate=lr, verbose=True)
+                            break                           
+                        
+                        except Exception as e:
+                            print(e)
+                            print("Please enter a valid float for the learning_rate.") 
+                    break;           
+                    
+                except ValueError:
+                    print("Please enter a valid integer for the number of epochs.")
+
+            
         elif selected_option == 2:
             print(f"{title}: predict")
             use_classifier(selected_dataset['dataset'], p1, given_point=point)

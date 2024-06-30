@@ -20,10 +20,10 @@ class MinimumDistance4(ModelInterface):
       }
 
     def decision_function(self, row):
-      x1 = row[self.columns[0]]
-      x2 = row[self.columns[1]]
-      x3 = row[self.columns[2]]
-      x4 = row[self.columns[3]]
+      x1 = row[0]
+      x2 = row[1]
+      x3 = row[2]
+      x4 = row[3]
     
       class1_w0 = sum(val ** 2 for val in self.class1_avg)
       class2_w0 = sum(val ** 2 for val in self.class2_avg)
@@ -54,21 +54,11 @@ class MinimumDistance4(ModelInterface):
       return (d1 + d2) / 2
 
     def predict(self, point):
-      row = {col: point[point_name] for col, point_name in zip(self.columns, self.point_names)}
+      if point is None:
+        raise ValueError("point cannot be None")
+      row = [point.get(point_name) for point_name in self.point_names]    
       return self.classify(row)
 
 
     def get_equation(self):
       return f'Decision Boundary Equation: x1 * {round(self.class1_avg[0], 2)} + x2 * {round(self.class1_avg[1], 2)} + x3 * {round(self.class1_avg[2], 2)} + x4 * {round(self.class1_avg[3], 2)} - {round(((self.class2_avg[0] * self.class2_avg[0]) + (self.class2_avg[1] * self.class2_avg[1]) + (self.class2_avg[2] * self.class2_avg[2]) + (self.class2_avg[3] * self.class2_avg[3]))/ 4, 2)}'
-
-
-    def get_decision_values(self, grid):
-      values = np.array([self.decision_function({self.columns[0]: x1, self.columns[1]: x2, self.columns[2]: x3, self.columns[3]: x4}) for x1, x2, x3, x4 in zip(np.ravel(grid['x1']), np.ravel(grid['x2']), np.ravel(grid['x3']), np.ravel(grid['x4']))])
-      array_2d = values.reshape((100, 100))
-      return array_2d
-    
-    def get_decision_values2(self, grid):
-
-      values = np.array([self.surface({self.columns[0]: x1, self.columns[1]: x2, self.columns[2]: x3, self.columns[3]: x4}) for x1, x2, x3, x4 in zip(np.ravel(grid['x1']), np.ravel(grid['x2']), np.ravel(grid['x3']), np.ravel(grid['x4']))])
-      array_2d = values.reshape((100, 100))
-      return array_2d
