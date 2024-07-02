@@ -30,7 +30,7 @@ class Perceptron(ModelInterface):
     def classify(self, row):
         result = [row[col] for col in self.columns]
 
-        return self.classes[0] if self.decision_function(result) > 0 else self.classes[1]
+        return self.classes[1] if self.decision_function(result) > 0 else self.classes[0]
 
     def fit(self, inputs, targets, learning_rate=0.01, epochs=10000, plateau_tolerance=20, reset_weights=False, verbose=False):
         max_lr = 0.9

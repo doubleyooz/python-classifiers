@@ -1,24 +1,21 @@
 import numpy as np
 import pandas as pd
 
-from models.BackPropagation import BackPropagation
-from models.KMeans import KMeans
-from models.MinimumDistance import MinimumDistance
-from models.MinimumDistance4 import MinimumDistance4
-from models.MinimumDistance2 import MinimumDistance2
-from models.Perceptron import Perceptron
-from models.NaiveBayes import NaiveBayes
-from utils.prepareData import get_classes, get_averages, get_pairs
+from constants.main import models
+from utils.prepareData import get_classes, get_averages, get_pairs, load_csv
 from utils.test import use_classifier, plot_cm, calculate_metrics, print_metrics, extract_values, map_values
 
 point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
 # Set the decimal separator to a comma
 
+df = load_csv('assets/Iris.csv')
+
 
 def main():
-    menu = ["MinimumDistance4", "MinimumDistance2", "MinimumDistanceN",
-            "Perceptron", "KMeans", "MaxBayes", "BackPropagation"]
-    dict_classes = get_pairs(2)
+
+    menu = list(models.keys())
+
+    dict_classes = get_pairs(df=df)
 
     classes_list = list(dict_classes.keys())
 
@@ -40,9 +37,9 @@ def main():
                 break
             selected_class = dict_classes[classes_list[selected_option]]
 
-            data, test, class1_df, class2_df, opposite_data_df = get_classes(
-                exclude=selected_class['exclude'], classes=selected_class['classes'], overwrite_classes=True)
-            get_pairs()
+            data, test, class1_df, class2_df, _ = get_classes(df=df,
+                                                              exclude=selected_class['exclude'], classes=selected_class['classes'], overwrite_classes=True)
+            get_pairs(df=df)
             class1_avg_dict, class1_avg_list = get_averages(class1_df)
             class2_avg_dict, class2_avg_list = get_averages(class2_df)
             print(class1_avg_list)
@@ -114,13 +111,13 @@ def use_minimum_distance_classifier(selected_model, selected_class, selected_dat
     print(len(selected_dataset['dataset']))
 
     if selected_model == 'MinimumDistance4':
-        c1 = MinimumDistance4(class1_avg=class1_avg_list,
-                              class2_avg=class2_avg_list, classes=selected_class)
+        c1 = models[selected_model](class1_avg=class1_avg_list,
+                                    class2_avg=class2_avg_list, classes=selected_class)
     elif selected_model == 'MinimumDistance2':
-        c1 = MinimumDistance2(
+        c1 = models[selected_model](
             class1_avg=class1_avg_list[:2], class2_avg=class2_avg_list[:2], classes=selected_class)
     else:
-        c1 = MinimumDistance(df=selected_dataset['dataset'])
+        c1 = models[selected_model](df=selected_dataset['dataset'])
 
     while True:
         title = f"{
@@ -151,7 +148,8 @@ def use_minimum_distance_classifier(selected_model, selected_class, selected_dat
 def use_k_means(selected_model, selected_class, selected_dataset, exclude):
     print(len(selected_dataset['dataset']))
 
-    k1 = KMeans(k=list(selected_dataset['dataset'].columns[: -1]))
+    k1 = models[selected_model](
+        k=list(selected_dataset['dataset'].columns[: -1]))
     print(k1.centroids, k1.k)
 
     while True:
@@ -182,7 +180,7 @@ def use_k_means(selected_model, selected_class, selected_dataset, exclude):
 
 def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
 
-    p1 = Perceptron(
+    p1 = models[selected_model](
         df=selected_dataset['dataset'].copy(), class_column='Species')
     while True:
         title = f"\n{
@@ -216,8 +214,8 @@ def use_perceptron(selected_model, selected_class, selected_dataset, exclude):
                 use_classifier(selected_dataset['dataset'], p1, fit=fit)
         elif selected_option == 1:
             print(f"{title}: fit")
-            data, test, class1_df, class2_df, opposite_data_df = get_classes(
-                exclude=exclude, classes=selected_class, overwrite_classes=True)
+            data, test, class1_df, class2_df, opposite_data_df = get_classes(df=df,
+                                                                             exclude=exclude, classes=selected_class, overwrite_classes=True)
             if selected_dataset['title'] == 'training':
                 dataset = data
             elif selected_dataset['title'] == 'test':
@@ -284,7 +282,7 @@ def use_bayes(selected_model, selected_class, selected_dataset, exclude):
             print(f"{title}: categorical")
             gaussian = False
 
-        bayes_1 = NaiveBayes(df=selected_dataset['dataset'].copy(
+        bayes_1 = models[selected_model](df=selected_dataset['dataset'].copy(
         ), class_column='Species', gaussian=gaussian)
         while True:
             title = f"\n{
@@ -318,7 +316,7 @@ def use_bayes(selected_model, selected_class, selected_dataset, exclude):
 def use_backpropagation(selected_model, selected_class, selected_dataset, exclude):
     print(len(selected_dataset['dataset']))
 
-    back_prop1 = BackPropagation(
+    back_prop1 = models[selected_model](
         df=selected_dataset['dataset'].copy(), class_column='Species')
 
     while True:
@@ -338,8 +336,8 @@ def use_backpropagation(selected_model, selected_class, selected_dataset, exclud
             print(f"{title}: train")
             # use_classifier(selected_dataset['dataset'], back_prop1, decision_boundary=True)
 
-            data, test, class1_df, class2_df, opposite_data_df = get_classes(
-                exclude=exclude, classes=selected_class, overwrite_classes=True)
+            data, test, class1_df, class2_df, opposite_data_df = get_classes(df=df,
+                                                                             exclude=exclude, classes=selected_class, overwrite_classes=True)
             if selected_dataset['title'] == 'training':
                 dataset = data
             elif selected_dataset['title'] == 'test':
@@ -426,8 +424,8 @@ def select_classes(classes_list, dict_classes):
 
     selected_class = dict_classes[classes_list[selected_option]]
 
-    data, test, class1_df, class2_df, opposite_data_df = get_classes(
-        exclude=selected_class['exclude'], classes=selected_class['classes'], overwrite_classes=True)
+    data, test, class1_df, class2_df, opposite_data_df = get_classes(df=df,
+                                                                     exclude=selected_class['exclude'], classes=selected_class['classes'], overwrite_classes=True)
 
     class1_avg_dict, class1_avg_list = get_averages(class1_df)
     class2_avg_dict, class2_avg_list = get_averages(class2_df)
@@ -440,8 +438,8 @@ def plot_confusion_matrix(title, exclude, selected_class, model):
         print(f"{title}: confusion_matrix")
         datasets_list = ['training', 'test', 'full']
 
-        data, test, class1_df, class2_df, opposite_data_df = get_classes(
-            exclude=exclude, classes=selected_class, overwrite_classes=True)
+        data, test, class1_df, class2_df, opposite_data_df = get_classes(df=df,
+                                                                         exclude=exclude, classes=selected_class, overwrite_classes=True)
         selected_option = show_menu_options(
             "Select dataset to be used in the confusion matrix", menu=datasets_list)
         if selected_option == len(datasets_list):
