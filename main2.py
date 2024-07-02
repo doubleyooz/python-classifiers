@@ -24,8 +24,8 @@ from PySide6.QtWidgets import (
 )
 
 
-from prepareData import load_csv 
-from test import use_classifier, plot_cm
+from utils.prepareData import load_csv 
+from utils.test import use_classifier, plot_cm
 from styles import white, primary_colour, secondary_colour 
 from models.MinimumDistance4 import MinimumDistance4
 from models.MinimumDistance2 import MinimumDistance2

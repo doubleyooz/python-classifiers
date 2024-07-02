@@ -3,19 +3,20 @@ import pandas as pd
 
 from models.BackPropagation import BackPropagation
 from models.KMeans import KMeans
+from models.MinimumDistance import MinimumDistance
 from models.MinimumDistance4 import MinimumDistance4
 from models.MinimumDistance2 import MinimumDistance2
 from models.Perceptron import Perceptron
 from models.MaxNaiveBayes import MaxNaiveBayes
-from prepareData import get_classes, get_averages, get_pairs
-from test import use_classifier, plot_cm, calculate_metrics, print_metrics, extract_values, map_values
+from utils.prepareData import get_classes, get_averages, get_pairs
+from utils.test import use_classifier, plot_cm, calculate_metrics, print_metrics, extract_values, map_values
 
 point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
 # Set the decimal separator to a comma
 
 
 def main():
-    menu = ["MinimumDistance4", "MinimumDistance2", "Perceptron", "KMeans", "MaxBayes", "BackPropagation"]
+    menu = ["MinimumDistance4", "MinimumDistance2", "MinimumDistanceN", "Perceptron", "KMeans", "MaxBayes", "BackPropagation"]
     dict_classes = get_pairs(2)
    
     classes_list = list(dict_classes.keys())
@@ -62,7 +63,7 @@ def main():
                 if selected_model == "Perceptron":
                     use_perceptron(selected_model=selected_model, selected_class=selected_class['classes'], selected_dataset=selected_dataset, exclude=selected_class['exclude'])
 
-                elif any(selected_model in x for x in ["MinimumDistance4", "MinimumDistance2"]):
+                elif any(selected_model in x for x in ["MinimumDistance4", "MinimumDistance2", "MinimumDistanceN"]):
                     use_minimum_distance_classifier(selected_model=selected_model, selected_dataset=selected_dataset, selected_class=selected_class['classes'], class1_avg_list=class1_avg_list, class2_avg_list=class2_avg_list, exclude=selected_class['exclude'])
               
                 elif selected_model == "MaxBayes":
@@ -101,10 +102,11 @@ def use_minimum_distance_classifier(selected_model, selected_class, selected_dat
   
     if selected_model == 'MinimumDistance4':
         c1 = MinimumDistance4(class1_avg=class1_avg_list, class2_avg=class2_avg_list, classes=selected_class)
-    else:
+    elif selected_model == 'MinimumDistance2':
         c1 = MinimumDistance2(class1_avg=class1_avg_list[:2], class2_avg=class2_avg_list[:2], classes=selected_class)
-
-    print(f"class_1: {c1.class1_avg}; class_2: {c1.class2_avg}")
+    else:
+        c1 = MinimumDistance(df=selected_dataset['dataset'])
+    
     while True:
         title = f"{selected_model} - {selected_class} - {selected_dataset['title']}"
         print(title)

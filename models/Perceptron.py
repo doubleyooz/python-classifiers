@@ -30,7 +30,6 @@ class Perceptron(ModelInterface):
     return self.classes[0] if self.decision_function(result) > 0 else self.classes[1]
 
   def fit(self, inputs, targets, learning_rate=0.01, epochs=10000, plateau_tolerance = 20, reset_weights = False, verbose=False):
-    print('fit')
     max_lr = 0.9
     min_lr = 0.001
     if learning_rate > 1:

@@ -3,7 +3,7 @@ import numpy as np
 from models.Model import ModelInterface
 
 class MinimumDistance4(ModelInterface):
-    def __init__(self, class1_avg, class2_avg, classes=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width', 'Petal length', 'Petal width'], point_names=['x1', 'x2', 'x3', 'x4']):
+    def __init__(self, class1_avg: list[float], class2_avg: list[float], classes=['setosa', 'versicolor'], columns=['Sepal length', 'Sepal width', 'Petal length', 'Petal width'], point_names=['x1', 'x2', 'x3', 'x4']):
       self.class1_avg = class1_avg
       self.class2_avg = class2_avg
       self.classes = classes    
@@ -18,8 +18,8 @@ class MinimumDistance4(ModelInterface):
         'accuracy': 0,
         'recall': 0
       }
-
-    def decision_function(self, row):
+    '''
+    def decision_function2(self, row: list[float]):
       x1 = row[0]
       x2 = row[1]
       x3 = row[2]
@@ -33,6 +33,21 @@ class MinimumDistance4(ModelInterface):
 
     
       return (d1 - d2)
+    '''
+
+    def decision_function(self, row: list[float]):   
+      x = np.array(row)      
+      
+      class1_avg = np.array(self.class1_avg)     
+      class2_avg = np.array(self.class2_avg)     
+      
+      class1_w0 = np.sum(class1_avg**2)
+      class2_w0 = np.sum(class2_avg**2)
+
+      d1 = np.dot(x, class1_avg) - (class1_w0 / 2)
+      d2 = np.dot(x, class2_avg) - (class2_w0 / 2)
+
+      return d1 - d2
 
     def classify(self, row):
       # print(self.classes[0] if self.decision_function(row) > 0 else self.classes[1])

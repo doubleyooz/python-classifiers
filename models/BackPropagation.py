@@ -140,7 +140,7 @@ class BackPropagation(ModelInterface):
             # print(f'{self.derivatives[i]} * {learning_rate} =  {self.derivatives[i] * learning_rate}')
             # print(f'self.biases[{i}]: {self.biases[i]}')
             # Perform gradient descent
-            print(f'self.derivatives[i]: {self.derivatives[i]}')
+            # print(f'self.derivatives[i]: {self.derivatives[i]}')
             self.weights[i] += self.derivatives[i] * learning_rate # self.biases[i]
 
    # train
