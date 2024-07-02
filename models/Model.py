@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
 
-class ModelInterface(ABC):
 
+class ModelInterface(ABC):
 
     @abstractmethod
     def decision_function(self, row):
         pass
-
 
     @abstractmethod
     def classify(self, row):
