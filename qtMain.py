@@ -3,7 +3,7 @@ import sys
 import time
 import pandas as pd
 
-from PySide6.QtCore import QSize
+
 from PySide6.QtGui import QAction, QColor, QIcon, QPalette, QIntValidator
 
 from PySide6.QtWidgets import (
@@ -29,8 +29,10 @@ from PySide6.QtWidgets import (
 
 from public.components.SelectableList import SelectableList
 from public.components.Sidebar import Sidebar
+from public.components.Toolbar import Toolbar
 from public.styles import white, primary_colour, secondary_colour
-from utils.prepareData import load_csv
+from utils.prepareData import get_pairs, load_csv
+from utils.pyside import clear_layout
 from utils.test import use_classifier, plot_cm
 
 from constants.main import models
@@ -46,8 +48,12 @@ class MainWindow(QMainWindow):
         self.model_selector = QComboBox()
         self.class_selector = QComboBox()
 
-        self.model_names = list(models.keys())
+        self.dict_classes = {}
 
+        self.class_pair_list = []
+        self.selected_pair = 0
+        self.model_names = list(models.keys())
+        self.model_selector.addItems(self.model_names)
         self.point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
         self.classes = ['virginica', 'versicolor']
 
@@ -56,7 +62,13 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status)
         self.save_path = ""
 
-        self.toolbox()
+        self.toolbar = Toolbar(self)
+        self.toolbar.add_toolbox_item(QAction(
+            QIcon(os.path.join("images", "camera-black.png")),
+            "Load CSV File...",
+            self,
+        ), self.load_csv)
+        self.toolbar.add_toolbox_widget(self.model_selector)
         # Create a table widget
         self.table_widget = QTableWidget(self)
         self.table_widget.setGeometry(200, 50, 600, 400)
@@ -66,62 +78,43 @@ class MainWindow(QMainWindow):
         mainLayout.addLayout(self.sidebar.sidebarLayout)
         mainLayout.addWidget(self.table_widget)
         self.setLayout(mainLayout)
-        self.on_halt_data()
+        self.on_empty_data()
         self.show()
 
-    def toolbox(self):
-        # Setup tools
-        toolbar = QToolBar("Toolbar")
-        toolbar.setIconSize(QSize(14, 14))
-        self.addToolBar(toolbar)
+    def update_selected_class_pair(self, index):
 
-        load_action = QAction(
-            QIcon(os.path.join("images", "camera-black.png")),
-            "Load CSV File...",
-            self,
-        )
-        load_action.setStatusTip("Take photo of current view")
-        load_action.triggered.connect(self.load_csv)
-        toolbar.addAction(load_action)
-
-        change_folder_action = QAction(
-            QIcon(os.path.join("images", "blue-folder-horizontal-open.png")),
-            "Change save location...",
-            self,
-        )
-        change_folder_action.setStatusTip(
-            "Change folder where photos are saved.")
-        change_folder_action.triggered.connect(self.change_folder)
-        toolbar.addAction(change_folder_action)
-
-        self.model_selector.addItems(self.model_names)
-        self.model_selector.currentIndexChanged.connect(
-            self.update_selected_model)
-
-        toolbar.addWidget(self.model_selector)
-
-    def show_explorer(self):
-        self.label.setText("Welcome to Explorer")
-
-    def show_source_control(self):
-        self.label.setText("Welcome to Source Control")
-
-    def show_extensions(self):
-        self.label.setText("Welcome to Extensions")
+        self.selected_pair = index
+        pass
 
     def update_selected_model(self, index):
-
+        print(index)
         dict_funs = {
             0: (lambda:
-                print('')
-                )(),
+                print('0'))(),
+            1: (lambda:
+                print('1'))(),
+            2: (lambda:
+                print('2'))(),
+            3: (lambda:
+                print('3'))(),
+            4: (lambda:
+                print('4'))(),
+            5: (lambda:
+                print('5'))(),
+            6: (lambda:
+                print('6'))(),
+            7: (lambda:
+                print('7'))(),
+            8: (lambda:
+                print('8'))(),
+
         }
 
         for btn_idx, button in enumerate(self.sidebar.buttons):
             self.sidebar.update_menu_item(
-                btn_idx, button.text(), button.icon(), dict_funs[0])
+                btn_idx, button.text(), button.icon(), dict_funs[btn_idx])
 
-        self.sidebar.minimunDistanceWidget.hide()
+        # self.sidebar.minimunDistanceWidget.hide()
         self.input_learning_rate.hide()
         self.no_csv_warning.show()
 
@@ -134,6 +127,15 @@ class MainWindow(QMainWindow):
             try:
                 # Read the CSV file into a DataFrame
                 self.df = pd.read_csv(file_path)
+                self.dict_classes = get_pairs(df=self.df)
+                self.class_pair_list = list(self.dict_classes.keys())
+                print(self.dict_classes)
+                print(self.class_pair_list)
+                self.class_selector.addItems(self.class_pair_list)
+                self.model_selector.currentIndexChanged.connect(
+                    self.update_selected_model)
+
+                print('got here')
 
                 # Display the data in the table widget
                 self.table_widget.setRowCount(len(self.df) + 1)
@@ -167,21 +169,19 @@ class MainWindow(QMainWindow):
 
                 print(non_num_columns)
                 self.class_selector.addItems(list(non_num_columns))
+
+                if self.sidebar.features_list != None:
+                    clear_layout(self.sidebar.features_list.selectableList)
                 self.sidebar.addSelectFeatures(features)
+
+                self.sidebar.sidebarLayout.addWidget(self.class_selector)
                 self.on_load_data()
             except pd.errors.EmptyDataError:
                 print("The selected file is empty.")
-                self.on_halt_data()
+                self.on_empty_data()
             except pd.errors.ParserError:
                 print("Error parsing the CSV file. Please check the file format.")
-                self.on_halt_data()
-
-    def change_folder(self):
-        path = QFileDialog.getExistingDirectory(
-            self, "Snapshot save location", "")
-        if path:
-            self.save_path = path
-            self.save_seq = 0
+                self.on_empty_data()
 
     def alert(self, s):
         """
@@ -190,15 +190,16 @@ class MainWindow(QMainWindow):
         err = QErrorMessage(self)
         err.showMessage(s)
 
-    def on_halt_data(self):
-        print('on_halt_data')
+    def on_empty_data(self):
+        print('on_empty_data')
         self.model_selector.setVisible(False)
-
+        self.sidebar.dataWidget.setVisible(False)
         self.sidebar.no_csv_warning.setVisible(True)
 
     def on_load_data(self):
         print('on_load_data')
-        self.model_selector.setVisible(False)
+        self.model_selector.setVisible(True)
+        self.sidebar.dataWidget.setVisible(True)
         self.sidebar.no_csv_warning.setVisible(False)
 
 

@@ -42,6 +42,8 @@ class Sidebar():
         self.buttons: list[QPushButton] = []
         self.models = []
         self.no_csv_warning = QLabel("No dataframe loaded", sidebarFrame)
+        self.sidebarLayout.addWidget(self.no_csv_warning)
+        self.features_list = None
         self.addActionButtons()
         self.addDataArea()
 
@@ -50,9 +52,9 @@ class Sidebar():
         # Add buttons to the sidebar
 
         self.buttons.append(self.add_menu_item(
-            self.sidebarLayout, "use_classifier", "code-fork", lambda _: True))
+            self.sidebarLayout, "use_classifier", lambda _: True))
         self.buttons.append(self.add_menu_item(self.sidebarLayout,
-                                               "plot_cm", "puzzle-piece", lambda _: True))
+                                               "plot_cm", lambda _: True))
 
     def addModelArea(self):
 
@@ -79,7 +81,8 @@ class Sidebar():
         self.splitDataInput.setPlaceholderText(
             "Only between 1 and 10")
         self.splitDataInput.setValidator(QIntValidator(1, 10))
-
+        # data, test, class1_df, class2_df, _ = get_classes(df=df,
+        #                                                  exclude=selected_class['exclude'], classes=selected_class['classes'], overwrite_classes=True)
         self.dataLayout.addWidget(self.splitDataLabel)
         self.dataLayout.addWidget(self.splitDataInput)
         self.sidebarLayout.addWidget(self.dataWidget)
@@ -97,10 +100,9 @@ class Sidebar():
             "text-align: left; padding-left: 10px;")
         self.buttons[idx].clicked.connect(callback)
 
-    def add_menu_item(self, layout, label, icon_name, callback):
+    def add_menu_item(self, layout, label, callback):
         # Unicode right arrow
         button = QPushButton(f"{label}  \u25B6")
-        button.setIcon(QIcon.fromTheme(icon_name))
         button.setStyleSheet("text-align: left; padding-left: 10px;")
         button.clicked.connect(callback)
 
