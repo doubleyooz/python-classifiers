@@ -4,7 +4,7 @@ import time
 import pandas as pd
 
 
-from PySide6.QtGui import QAction, QColor, QIcon, QPalette, QIntValidator
+from PySide6.QtGui import QAction, QColor, QIcon, QPalette, QIntValidator, QStandardItem, QStandardItemModel
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -52,8 +52,7 @@ class MainWindow(QMainWindow):
 
         self.class_pair_list = []
         self.selected_pair = 0
-        self.model_names = list(models.keys())
-        self.model_selector.addItems(self.model_names)
+
         self.point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
         self.classes = ['virginica', 'versicolor']
 
@@ -61,6 +60,8 @@ class MainWindow(QMainWindow):
         self.status = QStatusBar()
         self.setStatusBar(self.status)
         self.save_path = ""
+
+        self.load_model_selector()
 
         self.toolbar = Toolbar(self)
         self.toolbar.add_toolbox_item(QAction(
@@ -81,13 +82,20 @@ class MainWindow(QMainWindow):
         self.on_empty_data()
         self.show()
 
+    def load_model_selector(self):
+        self.model_names = list(models.keys())
+        self.model_selector.addItems(self.model_names)
+        self.model_selector.currentIndexChanged.connect(
+            self.update_selected_model)
+        pass
+
     def update_selected_class_pair(self, index):
 
         self.selected_pair = index
         pass
 
     def update_selected_model(self, index):
-        print(index)
+
         dict_funs = {
             0: (lambda:
                 print('0'))(),
@@ -109,14 +117,26 @@ class MainWindow(QMainWindow):
                 print('8'))(),
 
         }
+        print(f'index: {index}')
+        print(dict_funs[index])
 
-        for btn_idx, button in enumerate(self.sidebar.buttons):
+        '''
+           for btn_idx, button in enumerate(self.sidebar.buttons):
             self.sidebar.update_menu_item(
                 btn_idx, button.text(), button.icon(), dict_funs[btn_idx])
 
         # self.sidebar.minimunDistanceWidget.hide()
         self.input_learning_rate.hide()
         self.no_csv_warning.show()
+        '''
+
+    def update_selected_feature(self):
+        print('here')
+
+        checkboxes = self.sidebar.features_list.selectableList
+
+        print(checkboxes)
+        pass
 
     def load_csv(self):
         # Open a file dialog to select a CSV file
@@ -132,8 +152,6 @@ class MainWindow(QMainWindow):
                 print(self.dict_classes)
                 print(self.class_pair_list)
                 self.class_selector.addItems(self.class_pair_list)
-                self.model_selector.currentIndexChanged.connect(
-                    self.update_selected_model)
 
                 print('got here')
 
@@ -172,7 +190,8 @@ class MainWindow(QMainWindow):
 
                 if self.sidebar.features_list != None:
                     clear_layout(self.sidebar.features_list.selectableList)
-                self.sidebar.addSelectFeatures(features)
+                self.sidebar.addSelectFeatures(features, onChange=self.alert)
+                self.update_selected_feature()
 
                 self.sidebar.sidebarLayout.addWidget(self.class_selector)
                 self.on_load_data()
@@ -183,12 +202,19 @@ class MainWindow(QMainWindow):
                 print("Error parsing the CSV file. Please check the file format.")
                 self.on_empty_data()
 
-    def alert(self, s):
-        """
-        Handle errors coming from QCamera dn QCameraImageCapture by displaying alerts.
-        """
-        err = QErrorMessage(self)
-        err.showMessage(s)
+    def alert(self, items: list[str]):
+        # self.table_widget.setColumnHidden(1, True)
+
+        column_count = self.table_widget.columnCount()
+        for n in range(0, column_count):
+            if self.table_widget.item(0, n).text() in items:
+                self.table_widget.setColumnHidden(n, True)
+            else:
+                self.table_widget.setColumnHidden(n, False)
+                print(self.table_widget.item(0, n).text())
+
+        print(f' column_count: {column_count}')
+        # print(items)
 
     def on_empty_data(self):
         print('on_empty_data')

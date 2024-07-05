@@ -5,6 +5,7 @@ from PySide6.QtGui import QAction, QColor, QIcon, QPalette, QIntValidator, QStan
 from PySide6.QtWidgets import (
     QApplication,
     QVBoxLayout,
+    QCheckBox,
     QComboBox,
     QErrorMessage,
     QFileDialog,
@@ -24,39 +25,35 @@ from PySide6.QtWidgets import (
 
 
 class SelectableList():
-    def __init__(self,  title, items, parent=None):
+    def __init__(self,  title, items, onChange, parent=None):
 
         self.selectableList = QVBoxLayout(parent)
         self.selectableList.setSpacing(5)
         self.selectableList.addWidget(QLabel(title))
-
-        self.listView = QListView()
-        self.selectableList.addWidget(self.listView)
-        model = QStandardItemModel(self.listView)
+        self.onChange = onChange
+        self.listView = QVBoxLayout()
+        self.checkbox_list = []
+        self.active_features = []
         for item in items:
             # create an item with a caption
-            standardItem = QStandardItem(item)
+            standardItem = QCheckBox(item)
             standardItem.setCheckable(True)
-            model.appendRow(standardItem)
-        self.listView.setModel(model)
-        self.selectableList.addWidget(self.listView)
+            standardItem.setChecked(True)
+            standardItem.stateChanged.connect(self.itemsSelected)
+            self.listView.addWidget(standardItem)
+            self.checkbox_list.append(standardItem)
 
-    def addItems(self, items):
-        print(items)
-        model = QStandardItemModel(self.listView)
-        for item in items:
-            # create an item with a caption
-            standardItem = QStandardItem(item)
-            standardItem.setCheckable(True)
-            model.appendRow(standardItem)
-        self.listView.setModel(model)
+        self.selectableList.addLayout(self.listView)
+
+    def foo(self):
+        print('foo')
 
     def itemsSelected(self):
         selected = []
-        model = self.listView.model()
         i = 0
-        while model.item(i):
-            if model.item(i).checkState():
-                selected.append(model.item(i).text())
-            i += 1
-        return selected
+
+        temp = list(map(lambda y: y.text(), filter(
+            lambda x: not x.isChecked(), self.checkbox_list)))
+        # print(temp)
+        self.onChange(temp)
+        return temp

@@ -87,9 +87,9 @@ class Sidebar():
         self.dataLayout.addWidget(self.splitDataInput)
         self.sidebarLayout.addWidget(self.dataWidget)
 
-    def addSelectFeatures(self, items):
+    def addSelectFeatures(self, items, onChange):
         self.features_list = SelectableList(
-            title='Select Features', items=items)
+            title='Select Features', onChange=onChange, items=items)
         self.sidebarLayout.addLayout(self.features_list.selectableList)
 
     def update_menu_item(self, idx, label, icon, callback):
