@@ -1,3 +1,4 @@
+import ast
 import itertools
 import pandas as pd
 import numpy as np
@@ -19,8 +20,31 @@ def get_averages(data_df=None, features=['Sepal length', 'Sepal width', 'Petal l
 
 
 def get_pairs(df, class_column='Species', number_of_classes=2):
-    print(df.head(10))
-    classes = sorted(list(df[class_column].unique()))
+
+    print(f'class_column={class_column}, number_of_classes={
+          number_of_classes}')
+
+    possible_classes = df[class_column].unique().tolist()
+    print(possible_classes[:10])
+    for item in possible_classes:
+        try:
+            _ = ast.literal_eval(item)
+
+        except (ValueError, SyntaxError):
+            continue
+        else:
+            print('its not a string')
+            return {}
+    possible_classes = [str(
+        item) if item is not None else 'None' for item in df[class_column].unique().tolist()]
+
+    print('prior sorting')
+    print(possible_classes[:30])
+    if (len(possible_classes) > 30):
+        print('too many classes')
+        return {}
+    classes = sorted(possible_classes)
+
     permutations = list(itertools.combinations(classes, number_of_classes))
     opposite_permutations = list((cl, 'non_' + cl) for cl in classes)
 
@@ -40,7 +64,7 @@ def get_pairs(df, class_column='Species', number_of_classes=2):
     return temp
 
 
-def get_classes(df, exclude='virginica', column='Species', classes=['virginica', 'setosa', 'versicolor'], generate_numbers=False, seed=None, columns_ignored=-1, overwrite_classes=False):
+def get_classes(df, exclude='virginica', column='Species', classes=['virginica', 'setosa', 'versicolor'], generate_numbers=False, seed=None, columns_ignored=-1, overwrite_classes=False, frac=0.7):
 
     print(f'exclude={exclude}')
     if generate_numbers:
@@ -73,7 +97,7 @@ def get_classes(df, exclude='virginica', column='Species', classes=['virginica',
         seed = random.randint(1, 1000)
 
     # Randomly sample 70% of your dataframe
-    data = data_df.copy().sample(frac=0.7, random_state=seed)
+    data = data_df.copy().sample(frac=frac, random_state=seed)
 
     # Get the remaining 30% of the data
     test = data_df.copy().drop(data.index)

@@ -28,10 +28,11 @@ from PySide6.QtWidgets import (
 
 
 from public.components.SelectableList import SelectableList
+from public.components.Selector import Selector
 from public.components.Sidebar import Sidebar
 from public.components.Toolbar import Toolbar
 from public.styles import white, primary_colour, secondary_colour
-from utils.prepareData import get_pairs, load_csv
+from utils.prepareData import get_classes, get_pairs, load_csv
 from utils.pyside import clear_layout
 from utils.test import use_classifier, plot_cm
 
@@ -45,12 +46,15 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("CSV File Loader")
         self.setGeometry(100, 100, 832, 624)
-        self.model_selector = QComboBox()
-        self.class_selector = QComboBox()
+        self.model_selector = Selector(
+            list(models.keys()), self.update_combobox_model)
+        self.class_selector = Selector([], self.update_combobox_class)
 
         self.dict_classes = {}
 
         self.class_pair_list = []
+        self.training = []
+        self.test = []
         self.selected_pair = 0
 
         self.point = {'x1': 5.7, 'x2': 4.4, 'x3': 3.5, 'x4': 1.5}
@@ -61,40 +65,38 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status)
         self.save_path = ""
 
-        self.load_model_selector()
-
         self.toolbar = Toolbar(self)
         self.toolbar.add_toolbox_item(QAction(
             QIcon(os.path.join("images", "camera-black.png")),
             "Load CSV File...",
             self,
         ), self.load_csv)
-        self.toolbar.add_toolbox_widget(self.model_selector)
+        self.toolbar.add_toolbox_widget(self.model_selector.combobox)
         # Create a table widget
         self.table_widget = QTableWidget(self)
         self.table_widget.setGeometry(200, 50, 600, 400)
         self.sidebar = Sidebar(self)
 
         mainLayout = QHBoxLayout()
-        mainLayout.addLayout(self.sidebar.sidebarLayout)
+        mainLayout.addLayout(self.sidebar.mainLayout)
         mainLayout.addWidget(self.table_widget)
         self.setLayout(mainLayout)
         self.on_empty_data()
         self.show()
 
-    def load_model_selector(self):
-        self.model_names = list(models.keys())
-        self.model_selector.addItems(self.model_names)
-        self.model_selector.currentIndexChanged.connect(
-            self.update_selected_model)
-        pass
+    def update_combobox_class(self, index):
 
-    def update_selected_class_pair(self, index):
+        print(
+            f"text: {self.class_selector.combobox.currentText()}, index: {index}")
+        current_pair = self.dict_classes[self.class_selector.combobox.currentText(
+        )]
+        data, test, _, _, _ = get_classes(df=self.df,
+                                          exclude=current_pair['exclude'], classes=current_pair['classes'], overwrite_classes=True)
 
-        self.selected_pair = index
-        pass
+        self.training = data
+        self.test = test
 
-    def update_selected_model(self, index):
+    def update_combobox_model(self, index):
 
         dict_funs = {
             0: (lambda:
@@ -130,12 +132,8 @@ class MainWindow(QMainWindow):
         self.no_csv_warning.show()
         '''
 
-    def update_selected_feature(self):
-        print('here')
+    def update_split_data(self):
 
-        checkboxes = self.sidebar.features_list.selectableList
-
-        print(checkboxes)
         pass
 
     def load_csv(self):
@@ -147,11 +145,6 @@ class MainWindow(QMainWindow):
             try:
                 # Read the CSV file into a DataFrame
                 self.df = pd.read_csv(file_path)
-                self.dict_classes = get_pairs(df=self.df)
-                self.class_pair_list = list(self.dict_classes.keys())
-                print(self.dict_classes)
-                print(self.class_pair_list)
-                self.class_selector.addItems(self.class_pair_list)
 
                 print('got here')
 
@@ -176,24 +169,28 @@ class MainWindow(QMainWindow):
                                  QColor(secondary_colour))
                 self.table_widget.setPalette(palette)
 
-                non_num_columns = []
-                features = []
+                self.not_features = []
+                self.features = []
                 for col in self.df:
                     print(self.df[col].dtype)
                     if self.df[col].dtype == "object":
-                        non_num_columns.append(col)
+                        self.not_features.append(col)
                     else:
-                        features.append(col)
+                        self.features.append(col)
 
-                print(non_num_columns)
-                self.class_selector.addItems(list(non_num_columns))
+                print(self.not_features)
 
-                if self.sidebar.features_list != None:
-                    clear_layout(self.sidebar.features_list.selectableList)
-                self.sidebar.addSelectFeatures(features, onChange=self.alert)
-                self.update_selected_feature()
+                if self.sidebar.selectableLayout != None:
+                    clear_layout(
+                        self.sidebar.selectableLayout)
 
-                self.sidebar.sidebarLayout.addWidget(self.class_selector)
+                self.sidebar.addSelectFeatures(
+                    "Select Features", self.features, on_change=self.update_selected_feature)
+                self.sidebar.add_widget(self.class_selector.combobox)
+                self.sidebar.addSelectFeatures(
+                    "Select Class Column", self.not_features, on_change=self.update_selected_class, default_state=False, select_many=False)
+                print(f'not_features: {self.not_features}')
+
                 self.on_load_data()
             except pd.errors.EmptyDataError:
                 print("The selected file is empty.")
@@ -202,30 +199,59 @@ class MainWindow(QMainWindow):
                 print("Error parsing the CSV file. Please check the file format.")
                 self.on_empty_data()
 
-    def alert(self, items: list[str]):
+    def update_selected_feature(self, items: list[str]):
         # self.table_widget.setColumnHidden(1, True)
 
         column_count = self.table_widget.columnCount()
         for n in range(0, column_count):
-            if self.table_widget.item(0, n).text() in items:
+            column_name = self.table_widget.item(0, n).text()
+            if column_name in items:
                 self.table_widget.setColumnHidden(n, True)
-            else:
+            elif column_name in self.features:
                 self.table_widget.setColumnHidden(n, False)
-                print(self.table_widget.item(0, n).text())
+                print(column_name)
 
-        print(f' column_count: {column_count}')
         # print(items)
+
+    def update_selected_class(self, items: list[str]):
+        # self.table_widget.setColumnHidden(1, True)
+        temp = []
+        column_count = self.table_widget.columnCount()
+        for n in range(0, column_count):
+            column_name = self.table_widget.item(0, n).text()
+            if column_name in items:
+                self.table_widget.setColumnHidden(n, True)
+            elif column_name in self.not_features:
+                self.table_widget.setColumnHidden(n, False)
+                temp.append(column_name)
+        if len(temp) > 0:
+            self.switch_class_column(temp[0])
+
+    def switch_class_column(self, class_column):
+
+        self.dict_classes = get_pairs(
+            df=self.df, class_column=class_column)
+        self.class_pair_list = list(self.dict_classes.keys())
+        print(self.dict_classes)
+        print(self.class_pair_list)
+        self.class_selector.combobox.addItems(self.class_pair_list)
 
     def on_empty_data(self):
         print('on_empty_data')
-        self.model_selector.setVisible(False)
+        self.model_selector.combobox.setVisible(False)
+        self.class_selector.combobox.setVisible(False)
         self.sidebar.dataWidget.setVisible(False)
+        self.sidebar.buttonsWidget.setVisible(False)
         self.sidebar.no_csv_warning.setVisible(True)
 
     def on_load_data(self):
         print('on_load_data')
-        self.model_selector.setVisible(True)
+        self.class_selector.combobox.setVisible(True)
+        self.update_selected_class(self.not_features[0])
+
+        self.model_selector.combobox.setVisible(True)
         self.sidebar.dataWidget.setVisible(True)
+        self.sidebar.buttonsWidget.setVisible(True)
         self.sidebar.no_csv_warning.setVisible(False)
 
 
