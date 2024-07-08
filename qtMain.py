@@ -32,7 +32,7 @@ from public.components.Selector import Selector
 from public.components.Sidebar import Sidebar
 from public.components.Toolbar import Toolbar
 from public.styles import white, primary_colour, secondary_colour
-from utils.prepareData import get_classes, get_pairs, load_csv
+from utils.prepareData import get_averages, get_classes, get_pairs, load_csv
 from utils.pyside import clear_layout
 from utils.test import use_classifier, plot_cm
 
@@ -75,7 +75,16 @@ class MainWindow(QMainWindow):
         # Create a table widget
         self.table_widget = QTableWidget(self)
         self.table_widget.setGeometry(200, 50, 600, 400)
-        self.sidebar = Sidebar(self)
+        self.current_model = None
+        self.sidebar = Sidebar(self, buttons=[{
+            'label': 'use classifier',
+            'callback': lambda _: use_classifier(self.training, self.current_model, decision_boundary=True, fit=True)
+        },
+
+            {
+            'label': 'plot cm',
+            'callback': lambda _:  plot_cm(self.training, self.current_model)
+        }])
 
         mainLayout = QHBoxLayout()
         mainLayout.addLayout(self.sidebar.mainLayout)
@@ -90,37 +99,35 @@ class MainWindow(QMainWindow):
             f"text: {self.class_selector.combobox.currentText()}, index: {index}")
         current_pair = self.dict_classes[self.class_selector.combobox.currentText(
         )]
-        data, test, _, _, _ = get_classes(df=self.df,
-                                          exclude=current_pair['exclude'], classes=current_pair['classes'], overwrite_classes=True)
-
+        data, test, class1_df, class2_df, _ = get_classes(df=self.df,
+                                                          exclude=current_pair['exclude'], classes=current_pair['classes'], overwrite_classes=True)
+        self.class1_df = class1_df
+        self.class2_df = class2_df
         self.training = data
         self.test = test
 
     def update_combobox_model(self, index):
 
-        dict_funs = {
-            0: (lambda:
-                print('0'))(),
-            1: (lambda:
-                print('1'))(),
-            2: (lambda:
-                print('2'))(),
-            3: (lambda:
-                print('3'))(),
-            4: (lambda:
-                print('4'))(),
-            5: (lambda:
-                print('5'))(),
-            6: (lambda:
-                print('6'))(),
-            7: (lambda:
-                print('7'))(),
-            8: (lambda:
-                print('8'))(),
+        selected_classes = self.dict_classes[self.class_selector.combobox.currentText(
+        )]
+        selected_model = self.model_selector.combobox.currentText()
 
+        class1_avg_dict, class1_avg_list = get_averages(self.class1_df)
+        class2_avg_dict, class2_avg_list = get_averages(self.class2_df)
+        print('select model')
+        print(index)
+
+        print(f'models: {models.keys()}')
+        my_dict = {
+            0: models['MinimumDistance4'](class1_avg=class1_avg_list, class2_avg=class2_avg_list, classes=selected_classes['classes']),
+            1: models['MinimumDistance2'](class1_avg=class1_avg_list[:2], class2_avg=class2_avg_list[:2], classes=selected_classes['classes']),
+            2: models['MinimumDistance'](df=self.training),
+            3: models['Perceptron'](df=self.training, class_column='Species'),
+            5: models['NaiveBayes'](df=self.training, class_column='Species', gaussian=True),
+            6: models['BackPropagation'](df=self.training, class_column='Species')
         }
-        print(f'index: {index}')
-        print(dict_funs[index])
+
+        self.current_model = my_dict[index]
 
         '''
            for btn_idx, button in enumerate(self.sidebar.buttons):

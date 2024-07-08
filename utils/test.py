@@ -47,7 +47,8 @@ def use_classifier(data2, model: ModelInterface, given_point=None, old_entries=F
     # Create a dictionary to map class names to numerical values
 
     X_test, Y_test = extract_values(modified_df)
-
+    print(Y_test)
+    print(model.class_mapping)
     Y_test = map_values(Y_test, model.class_mapping)
     # Calculate the distance for each point on the grid
     has_fit = getattr(model, "fit", None)

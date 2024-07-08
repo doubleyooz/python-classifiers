@@ -32,7 +32,7 @@ from public.styles import white, primary_colour, secondary_colour
 
 
 class Sidebar():
-    def __init__(self, parent):
+    def __init__(self, parent=None, buttons=[]):
         sidebarFrame = QFrame(parent)
         sidebarFrame.setGeometry(0, 50, 200, parent.height())
         sidebarFrame.setStyleSheet(
@@ -56,20 +56,19 @@ class Sidebar():
         self.mainLayout.addStretch()
         self.add_widget(self.no_csv_warning)
 
-        self.addActionButtons()
+        self.addActionButtons(buttons)
         self.addDataArea()
         self.mainLayout.insertLayout(
             self.mainLayout.count()-1, self.selectableLayout)
 
-    def addActionButtons(self):
+    def addActionButtons(self, buttons):
 
         # Add buttons to the sidebar
         self.buttonsWidget = QWidget()
         self.buttonsLayout = QVBoxLayout(self.buttonsWidget)
-        self.add_menu_item(
-            self.buttonsLayout, "use_classifier", lambda _: True)
-        self.add_menu_item(self.buttonsLayout,
-                           "plot_cm", lambda _: True)
+        for button in buttons:
+            self.add_menu_item(self.buttonsLayout,
+                               label=button['label'], callback=button['callback'])
 
         self.add_widget(self.buttonsWidget)
 
